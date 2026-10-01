@@ -65,8 +65,8 @@ async function check(page,{pro=false,label}){
  const expected=pro?12:5;
  assert.equal(await page.locator(".national-result-card").count(),expected,label+" national preview");
  assert.equal(await page.locator(".result-card").count(),pro?6:5,label+" SP preview");
- assert.equal(await page.locator("#national-advanced").isEnabled(),pro,label+" advanced national filters");
- assert.equal(await page.locator("#sp-advanced").isEnabled(),pro,label+" advanced SP filters");
+ assert.equal(await page.locator("#national-city").isEnabled(),pro,label+" advanced national filters");
+ assert.equal(await page.locator("#segment").isEnabled(),pro,label+" advanced SP filters");
  assert.equal(await page.locator("#national-download").isEnabled(),pro,label+" CSV availability");
  assert.equal(await page.locator("#national-pro-tools").isVisible(),pro,label+" saved search dashboard");
  assert.equal(await page.locator("#national-locked").isVisible(),!pro,label+" Free upgrade prompt");
