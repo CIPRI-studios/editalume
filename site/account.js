@@ -123,9 +123,15 @@
    render();emit();
    return !exists;
  }
+ async function getAccessToken(){
+   if(!state.user||!state.pro)return null;
+   const {data:{session},error}=await client.auth.getSession();
+   if(error)throw error;
+   return session?.user?.id===state.user.id?session.access_token:null;
+ }
  const api={get user(){return state.user},get favorites(){return state.favorites},
    get savedSearches(){return state.savedSearches},get isPro(){return state.pro},
-   toggleFavorite,createSavedSearch,deleteSavedSearch,refresh:reload};
+   toggleFavorite,createSavedSearch,deleteSavedSearch,getAccessToken,refresh:reload};
  window.EditalumeAccount=Object.freeze(api);
  function renderFavorites(){
    const root=$("account-favorites");if(!root)return;
