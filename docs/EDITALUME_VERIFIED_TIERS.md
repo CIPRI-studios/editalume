@@ -31,3 +31,8 @@ With a nonauthenticated database session, requesting 60 results returned exactly
 - GitHub workflows: `Editalume · freemium contract QA`, `Editalume · password auth QA` and independent Pages deployment.
 - Supabase migrations: `editalume_server_verified_free_pro_search`.
 - Security review: `editalume_internal.caller_has_verified_pro` has a fixed, empty `search_path`, checks `auth.uid()`, exposes only Boolean status via an unexposed schema, and may be executed by `anon` and `authenticated` for RPC evaluation. Never move it to the exposed `public` schema.
+
+## Additional Pro indicators
+Database migration `editalume_pro_filtered_sample_insights` adds a Pro-only, authenticated RPC. It applies the same keyword/state/city/sector/deadline/minimum filters, returning current sample count, deadlines within seven days, count and sum of reported positive estimate values, and identified city count. The RPC rejects Free users and guests. Both denied-Free and temporary-verified-Pro paths passed transactional database checks; the temporary entitlement was rolled back. UI must label these as non-exhaustive sample metrics, not guaranteed pipeline or market-size estimates.
+
+Database migration `editalume_pro_saved_search_and_email_delivery_gate` additionally rejects edits by expired/non-Pro users and rejects `alerts_enabled=true` for **all** users until transactional email delivery has been tested. The delete operation remains available to owners so their saved data can be cleared after subscription expiry.

@@ -215,6 +215,39 @@ function args(){
   p_days:days?Number(days):null,p_min_value:amount?Math.max(0,Number(amount)):null,
   p_sort:premium?$("national-sort").value:"deadline",p_limit:pageSize(),p_offset:premium?state.offset:0};
 }
+
+async function loadProInsights(query,token,ctrl){
+ const panel=$("national-insights");
+ if(!isPro()||!token||state.request!==ctrl){panel.hidden=true;return;}
+ panel.hidden=false;
+ const status=$("national-insights-status");
+ status.textContent="Calculando indicadores da amostra...";
+ for(const id of ["national-insight-total","national-insight-urgent","national-insight-valued","national-insight-value","national-insight-cities"])$(id).textContent="—";
+ try{
+   const {p_q,p_uf,p_city,p_focus,p_days,p_min_value}=query;
+   const response=await fetch(API+"/rpc/editalume_pro_insights",{
+     method:"POST",
+     headers:{"apikey":KEY,"Content-Type":"application/json","Authorization":"Bearer "+token},
+     body:JSON.stringify({p_q,p_uf,p_city,p_focus,p_days,p_min_value}),
+     signal:ctrl.signal,cache:"no-store"
+   });
+   if(!response.ok)throw new Error("Insights unavailable");
+   const rows=await response.json();
+   if(state.request!==ctrl)return;
+   const data=Array.isArray(rows)?rows[0]:null;
+   if(!data||!Number.isFinite(Number(data.matched_opportunities)))throw new Error("Unexpected indicators");
+   $("national-insight-total").textContent=fmt.format(Number(data.matched_opportunities)||0);
+   $("national-insight-urgent").textContent=fmt.format(Number(data.closing_next_seven)||0);
+   $("national-insight-valued").textContent=fmt.format(Number(data.valued_opportunities)||0);
+   $("national-insight-cities").textContent=fmt.format(Number(data.cities_covered)||0);
+   const sum=Number(data.estimated_total_brl);
+   $("national-insight-value").textContent=Number.isFinite(sum)?money.format(sum):"Consultar dados";
+   status.textContent="Somente registros da amostra, sujeitos a alterações. Sempre confira o edital oficial.";
+ }catch(error){
+   if(error.name==="AbortError"||state.request!==ctrl)return;
+   status.textContent="Indicadores temporariamente indisponíveis. Os resultados da pesquisa continuam acessíveis.";
+ }
+}
 async function search(){
  if(!isPro())state.offset=0;
  if(state.request)state.request.abort();
@@ -228,16 +261,20 @@ async function search(){
    ?await window.EditalumeAccount.getAccessToken():null;
   const headers={"apikey":KEY,"Content-Type":"application/json"};
   if(token)headers.Authorization="Bearer "+token;
-  const response=await fetch(API+"/rpc/editalume_search",{method:"POST",headers,body:JSON.stringify(args()),signal:ctrl.signal,cache:"no-store"});
+  const query=args();
+  const response=await fetch(API+"/rpc/editalume_search",{method:"POST",headers,body:JSON.stringify(query),signal:ctrl.signal,cache:"no-store"});
   if(!response.ok)throw new Error("HTTP "+response.status);
   const rows=await response.json();if(!Array.isArray(rows))throw Error("Resposta inesperada");
   if(state.request!==ctrl)return;
   state.items=rows.filter(r=>official(r));state.total=Number(rows[0]?.total_count)||0;
   $("national-status").textContent="Base de dados independente conectada. Cobertura nacional em expansão; resultados não são uma lista exaustiva.";
   renderCards();
+  if(isPro()&&token)void loadProInsights(query,token,ctrl);
+  else $("national-insights").hidden=true;
  }catch(err){
   if(err.name==="AbortError")return;
   if(state.request!==ctrl)return;
+  $("national-insights").hidden=true;
   empty($("national-results"));state.items=[];state.total=0;
   $("national-result-count").textContent="Conexão indisponível";
   $("national-status").textContent="Não foi possível consultar o Supabase agora. O acervo paulista abaixo permanece disponível; para dados completos use o PNCP.";
@@ -327,6 +364,7 @@ function updateProControls(){
  $("national-pro-tools").hidden=!pro;
  $("national-locked").hidden=pro;
  $("national-free-upsell").hidden=pro;
+ if(!pro)$("national-insights").hidden=true;
  if(!pro){
   $("national-save-search-form").hidden=true;
   $("national-save-search-toggle").setAttribute("aria-expanded","false");
