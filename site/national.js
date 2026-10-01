@@ -222,7 +222,13 @@ async function search(){
  $("national-submit").disabled=true;$("national-status").textContent="Consultando base nacional...";
  $("national-result-count").textContent="Buscando...";
  try{
-  const response=await fetch(API+"/rpc/editalume_search",{method:"POST",headers:{"apikey":KEY,"Content-Type":"application/json"},body:JSON.stringify(args()),signal:ctrl.signal,cache:"no-store"});
+  // The publishable key identifies the project, not the user. Only a valid
+  // Supabase Auth access token lets the backend verify a real Pro entitlement.
+  const token=isPro()&&window.EditalumeAccount?.getAccessToken
+   ?await window.EditalumeAccount.getAccessToken():null;
+  const headers={"apikey":KEY,"Content-Type":"application/json"};
+  if(token)headers.Authorization="Bearer "+token;
+  const response=await fetch(API+"/rpc/editalume_search",{method:"POST",headers,body:JSON.stringify(args()),signal:ctrl.signal,cache:"no-store"});
   if(!response.ok)throw new Error("HTTP "+response.status);
   const rows=await response.json();if(!Array.isArray(rows))throw Error("Resposta inesperada");
   if(state.request!==ctrl)return;
