@@ -329,13 +329,54 @@ async function copySearchLink(){
 let debounce=null;
 function filtersChanged(){state.offset=0;clearTimeout(debounce);debounce=setTimeout(()=>{renderCoverage();search()},300)}
 function csvCell(v){let s=String(v??"").replace(/[\r\n]/g," ").trim();if(/^[\s]*[=+\-@]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'}
+let exportPending=false;
 function downloadPage(){
- if(!isPro()||!state.items.length)return;
- const rows=[["Controle PNCP","Título","Órgão","Município","UF","Categoria sugerida","Modalidade","Prazo informado","Valor estimado BRL","Último registro","Edital oficial"]];
- for(const r of state.items){const url=official(r);if(!url)continue;
-  rows.push([r.pncp_id,r.title,r.agency,r.municipality,r.uf,category(r.title),r.modality,r.closing_at,r.estimated_value_brl??"",r.last_observed_at,url]);}
- const blob=new Blob(["\ufeff",rows.map(row=>row.map(csvCell).join(";")).join("\r\n")],{type:"text/csv;charset=utf-8"});
- const url=URL.createObjectURL(blob),a=node("a");a.href=url;a.download="editalume-brasil-pagina.csv";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ if(!isPro()||!state.items.length||exportPending)return;
+ void exportProCsv();
+}
+async function exportProCsv(){
+ const status=$("national-export-status"),button=$("national-download");
+ exportPending=true;button.disabled=true;
+ status.textContent="Preparando seu CSV Pro...";
+ try{
+   const token=await window.EditalumeAccount?.getAccessToken?.();
+   if(!token||!isPro())throw new Error("Sessão Pro não verificada. Entre novamente na sua conta.");
+   const snapshot=args(),limit=50,max=Math.min(200,window.EditalumePlanPolicy?.maxProExport||200);
+   const unique=new Map();
+   for(let offset=0;offset<max;offset+=limit){
+     const response=await fetch(API+"/rpc/editalume_search",{
+       method:"POST",headers:{"apikey":KEY,"Content-Type":"application/json","Authorization":"Bearer "+token},
+       body:JSON.stringify({...snapshot,p_limit:limit,p_offset:offset}),
+       cache:"no-store"
+     });
+     if(!response.ok)throw new Error("Não foi possível validar seu acesso Pro para exportação.");
+     const batch=await response.json();
+     if(!Array.isArray(batch))throw new Error("O servidor retornou resultados inválidos.");
+     const total=Number(batch[0]?.total_count)||0;
+     if(offset===0&&total>batch.length&&batch.length<limit)
+       throw new Error("Seu acesso Pro precisa ser renovado antes de exportar.");
+     for(const record of batch){
+       if(official(record)&&Date.parse(record.closing_at)>Date.now())unique.set(record.pncp_id,record);
+     }
+     status.textContent="Preparando CSV: "+fmt.format(unique.size)+" registros...";
+     if(batch.length<limit)break;
+   }
+   const items=Array.from(unique.values()).slice(0,max);
+   if(!items.length){status.textContent="Nenhuma oportunidade desta pesquisa disponível para exportação.";return;}
+   const rows=[["Controle PNCP","Título","Órgão","Município","UF","Categoria sugerida","Modalidade","Prazo informado","Valor estimado BRL","Último registro","Edital oficial"]];
+   for(const r of items)rows.push([r.pncp_id,r.title,r.agency,r.municipality,r.uf,category(r.title),r.modality,r.closing_at,r.estimated_value_brl??"",r.last_observed_at,official(r)]);
+   const blob=new Blob(["\ufeff",rows.map(row=>row.map(csvCell).join(";")).join("\r\n")],{type:"text/csv;charset=utf-8"});
+   const url=URL.createObjectURL(blob),a=node("a");
+   a.href=url;a.download="editalume-pro-amostra-max200.csv";
+   document.body.append(a);a.click();a.remove();
+   setTimeout(()=>URL.revokeObjectURL(url),1000);
+   status.textContent=fmt.format(items.length)+" oportunidades exportadas. Dados amostrais: confirme cada edital no PNCP.";
+ }catch(error){
+   status.textContent=error?.message||"Não foi possível concluir a exportação. Tente novamente.";
+ }finally{
+   exportPending=false;
+   button.disabled=!isPro()||!state.items.length||state.loading;
+ }
 }
 async function loadCoverage(){
  try{
