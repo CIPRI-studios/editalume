@@ -39,3 +39,6 @@ Database migration `editalume_pro_saved_search_and_email_delivery_gate` addition
 
 ## Pro CSV bulk export
 The dedicated national Pro export fetches at most 200 matching, still-valid sample entries in authenticated 50-result pages, deduplicates PNCP IDs, validates links, and CSV-escapes spreadsheet formula prefixes. Free UI cannot invoke the action; the existing SQL RPC also caps Free requests to five records independent of the browser. The export deliberately excludes nonmatching/expired notices and cannot guarantee the official PNCP record remains unchanged. No emails or billing are activated by this feature.
+
+## Legacy São Paulo snapshot consistency
+The complementary São Paulo static sample on the official CIPRI Studios site now matches the Free experience: five visible result cards, basic keyword search, disabled advanced controls and CSV for guests/Free; verified Pro can use the advanced snapshot filters and historical sample exports. The snapshot JSON itself remains openly accessible because the underlying PNCP notices are public, and its online availability is a fallback, not a premium exclusivity claim.
