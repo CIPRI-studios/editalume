@@ -1,0 +1,334 @@
+/* Editalume Brasil: public Supabase read-only national search. Publishable key is
+   intentionally public; RLS and SQL grants prohibit client-side writes. */
+(()=>{
+"use strict";
+const API="https://jhxhbgprjqppzfrjdfvj.supabase.co/rest/v1";
+const KEY="sb_publishable_O85v7HRJg7br9kxUbvticw_NNO8jp4w";
+const STATES={"AC":"Acre","AL":"Alagoas","AP":"Amapá","AM":"Amazonas","BA":"Bahia","CE":"Ceará","DF":"Distrito Federal","ES":"Espírito Santo","GO":"Goiás","MA":"Maranhão","MT":"Mato Grosso","MS":"Mato Grosso do Sul","MG":"Minas Gerais","PA":"Pará","PB":"Paraíba","PR":"Paraná","PE":"Pernambuco","PI":"Piauí","RJ":"Rio de Janeiro","RN":"Rio Grande do Norte","RS":"Rio Grande do Sul","RO":"Rondônia","RR":"Roraima","SC":"Santa Catarina","SP":"São Paulo","SE":"Sergipe","TO":"Tocantins"};
+const $=id=>document.getElementById(id);
+const PAGE_SIZE=12;
+const fmt=new Intl.NumberFormat("pt-BR"),money=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+const dt=new Intl.DateTimeFormat("pt-BR",{dateStyle:"short",timeStyle:"short",timeZone:"America/Sao_Paulo"});
+const node=(tag,cls,txt)=>{let x=document.createElement(tag);if(cls)x.className=cls;if(txt!==undefined)x.textContent=String(txt);return x};
+const empty=el=>el.replaceChildren();
+const knownStatus={not_started:"Aguardando coleta",complete_sample:"Amostra recebida",partial:"Cobertura parcial",rate_limited:"Consulta limitada",failed:"Falha recente"};
+const state={coverage:[],coverageState:"pending",items:[],total:0,offset:0,loading:false,request:null,firstLoad:true,saved:[]};
+function official(row){
+ const m=/^(\d{14})-\d+-(\d+)\/(\d{4})$/.exec(row?.pncp_id||"");
+ if(!m||Number(m[2])<1)return null;
+ return "https://pncp.gov.br/app/editais/"+m[1]+"/"+m[3]+"/"+Number(m[2]);
+}
+function formatDate(iso){const date=new Date(iso);return Number.isFinite(date.getTime())?dt.format(date):"Verificar no PNCP"}
+function formatValue(n){return n!==null&&Number(n)>0?money.format(Number(n)):"Não informado"}
+// Approximate grouping from the published PNCP title; verify the official notice.
+function category(title){
+ const t=String(title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+ const groups=[
+  ["Saúde",/\b(saude|hospital|medicamento|farmac|odontolog|laborator|enfermagem)/],
+  ["Educação",/\b(escola|educacao|pedagog|didatic|universidad|creche)/],
+  ["Tecnologia",/\b(software|informat|computad|tecnolog|servidor|licenca digital|sistema de informacao)/],
+  ["Obras e engenharia",/\b(obra|engenharia|construc|reforma|paviment|infraestrutura)/],
+  ["Limpeza e serviços",/\b(limpeza|higieniz|conservac|portaria|vigilancia|manutenc|facilities)/],
+  ["Transporte e logística",/\b(transporte|veiculo|combustivel|logistica|frete|passagem)/],
+  ["Alimentos",/\b(aliment|merenda|refeic|generos alimenticios)/],
+  ["Materiais e equipamentos",/\b(equipament|material|mobiliario|ferramenta|maquina)/]
+ ];
+ return groups.find(([,pattern])=>pattern.test(t))?.[0]||"Outros";
+}
+function renderCoverage(){
+ // A failed status request is UNKNOWN, not proof that zero states have data.
+ const verified=state.coverageState==="loaded";
+ const available=verified?state.coverage.filter(c=>
+   c.last_success_at&&Number.isFinite(Date.parse(c.last_success_at))&&
+   Date.parse(c.last_success_at)<=Date.now()&&
+   ["complete_sample","partial","rate_limited"].includes(c.status)): [];
+ const count=available.length;
+ $("national-uf-count").textContent=verified?fmt.format(count)+"/27":"—/27";
+ $("national-coverage-description").textContent=!verified
+   ?(state.coverageState==="error"
+     ?"Cobertura temporariamente indisponível. Não é possível confirmar quantos estados têm amostras agora."
+     :"Verificando amostras recebidas por estado...")
+   :count===0
+     ?"Consulta concluída: ainda não há amostras validadas nas 27 UFs."
+     :fmt.format(count)+" de 27 UFs com ao menos uma amostra recebida. Isso não significa cobertura completa.";
+ const wrap=$("national-state-grid");empty(wrap);
+ for(const [uf,name] of Object.entries(STATES)){
+  const current=verified?state.coverage.find(x=>x.uf===uf):null;
+  const hasData=!!current&&available.some(x=>x.uf===uf);
+  const unknown=!verified;
+  const item=node("button","national-state"+(hasData?" has-data":unknown?" unknown":" pending")+
+    ($("national-uf").value===uf?" active":""),uf);
+  item.type="button";
+  const detail=unknown
+    ?state.coverageState==="error"?"Cobertura não verificada: conexão indisponível":"Verificando cobertura"
+    :knownStatus[current?.status]||"Aguardando coleta";
+  const lastSample=hasData?formatDate(current.last_success_at):"";
+  item.title=name+" — "+detail+(lastSample?" · Última amostra: "+lastSample:"");
+  item.setAttribute("aria-label",item.title);
+  item.setAttribute("aria-pressed",String($("national-uf").value===uf));
+  item.addEventListener("click",()=>{$("national-uf").value=uf;state.offset=0;renderCoverage();search();});
+  wrap.append(item);
+ }
+}
+// Device-only public PNCP bookmarks. They are NOT cloud-synced, Premium
+// saved searches, deadline reminders or evidence that a notice is still open.
+const SAVED_KEY="editalume_saved_pncp_v1";
+const MAX_SAVED=3; // New device-only guest saves; previously saved entries are retained.
+function cleanBookmark(v){
+ if(!v||typeof v!=="object"||!STATES[v.uf]||typeof v.title!=="string"||
+    typeof v.pncp_id!=="string"||!official(v)||typeof v.closing_at!=="string"||
+    !Number.isFinite(Date.parse(v.closing_at)))return null;
+ return {pncp_id:v.pncp_id,uf:v.uf,title:v.title.slice(0,220),
+         closing_at:new Date(v.closing_at).toISOString()};
+}
+function loadBookmarks(){
+ try{
+  const rows=JSON.parse(localStorage.getItem(SAVED_KEY)||"[]");
+  if(!Array.isArray(rows))return [];
+  const seen=new Set();
+  return rows.map(cleanBookmark).filter(x=>{
+    if(!x||seen.has(x.pncp_id))return false;
+    seen.add(x.pncp_id);return true;
+  }).slice(0,30); // Never discard existing device bookmarks during rollout.
+ }catch{return [];}
+}
+function updateBookmarks(items){
+ try{
+  localStorage.setItem(SAVED_KEY,JSON.stringify(items));
+  state.saved=items;
+  return true;
+ }catch{
+  $("national-save-status").textContent="Não foi possível guardar neste navegador. Verifique o armazenamento privado ou bloqueado.";
+  return false;
+ }
+}
+function renderBookmarks(){
+ $("national-saved-count").textContent=fmt.format(state.saved.length);
+ const root=$("national-saved-list");empty(root);
+ const sorted=[...state.saved].sort((a,b)=>Date.parse(a.closing_at)-Date.parse(b.closing_at));
+ for(const row of sorted){
+  const wrap=node("div","national-saved-item");
+  const name=node("div","national-saved-main");
+  const title=node("strong",null,row.title);
+  const closed=Date.parse(row.closing_at)<=Date.now();
+  name.append(node("span","national-pill",row.uf),title,
+    node("small",closed?"Prazo informado já passou. Confirme no PNCP.":"Prazo informado: "+formatDate(row.closing_at)));
+  const actions=node("div","national-saved-actions");
+  const url=publicLink(row,"Ver no PNCP ↗");if(url)actions.append(url);
+  const remove=node("button","national-unsave","Remover");remove.type="button";
+  remove.setAttribute("aria-label","Remover edital salvo: "+row.title);
+  remove.addEventListener("click",()=>toggleBookmark(row));
+  actions.append(remove);wrap.append(name,actions);root.append(wrap);
+ }
+ $("national-saved-empty").hidden=sorted.length>0;
+}
+async function toggleBookmark(raw){
+ const candidate=cleanBookmark(raw);if(!candidate)return;
+ const account=window.EditalumeAccount;
+ if(account?.user){
+   try{
+     const saved=await account.toggleFavorite(candidate);
+     $("national-save-status").textContent=saved
+       ?"Favorito salvo na sua conta e sincronizado entre dispositivos."
+       :"Favorito removido da sua conta.";
+   }catch(error){$("national-save-status").textContent=error.message||"Não foi possível atualizar seus favoritos.";}
+   return;
+ }
+ const exists=state.saved.some(v=>v.pncp_id===candidate.pncp_id);
+ if(!exists&&state.saved.length>=MAX_SAVED){
+  $("national-save-status").textContent="Sem conta, você pode adicionar até três novos favoritos neste dispositivo. Crie uma conta para sincronizar até cinco.";
+  return;
+ }
+ const next=exists?state.saved.filter(v=>v.pncp_id!==candidate.pncp_id):[...state.saved,candidate];
+ if(!updateBookmarks(next))return;
+ $("national-save-status").textContent=exists?"Edital removido.":"Salvo só neste navegador. Crie uma conta para sincronizar.";
+ renderBookmarks();renderCards();
+}
+function publicLink(row,label){
+ const href=official(row);if(!href)return null;
+ const a=node("a","national-source",label);a.href=href;a.target="_blank";a.rel="noopener noreferrer";return a;
+}
+function renderCards(){
+ const root=$("national-results");empty(root);
+ for(const row of state.items){
+  const href=official(row);if(!href||Date.parse(row.closing_at)<=Date.now())continue;
+  const card=node("article","national-result-card");
+  const main=node("div","national-result-main");
+  const head=node("div","national-result-tags");
+  head.append(node("span","national-pill",row.uf+" · "+(row.municipality||"Município não identificado")),
+   node("span","national-pill muted",category(row.title)+" · categoria sugerida"));
+  const title=node("h3",null,row.title);
+  const agency=node("p","national-agency",row.agency||"Órgão não informado");
+  const metadata=node("div","national-result-meta");
+  metadata.append(node("span",null,row.modality||"Modalidade: consultar PNCP"),
+   node("span",null,"Último registro: "+formatDate(row.last_observed_at)));
+  const saved=state.saved.some(x=>x.pncp_id===row.pncp_id);
+  const save=node("button","national-save"+(saved?" is-saved":""),saved?"★ Salvo":"☆ Salvar");
+  save.type="button";save.setAttribute("aria-pressed",String(saved));
+  save.setAttribute("aria-label",(saved?"Remover dos salvos: ":"Salvar edital: ")+row.title);
+  save.addEventListener("click",()=>toggleBookmark(row));
+  main.append(head,title,agency,metadata,save);
+  const side=node("div","national-result-side");
+  side.append(node("span","national-label","PRAZO INFORMADO"),
+    node("strong","national-date",formatDate(row.closing_at)),
+    node("span","national-label","VALOR ESTIMADO"),
+    node("strong","national-money",formatValue(row.estimated_value_brl)));
+  const link=publicLink(row,"Ver edital no PNCP ↗");if(link)side.append(link);
+  card.append(main,side);root.append(card);
+ }
+ $("national-result-count").textContent=fmt.format(state.total)+(state.total===1?" edital encontrado":" editais encontrados");
+ $("national-page-indicator").textContent="Exibindo "+fmt.format(state.items.length?state.offset+1:0)+"–"+fmt.format(Math.min(state.total,state.offset+state.items.length))+" de "+fmt.format(state.total)+" registros. Confirme os prazos no PNCP.";
+ $("national-prev").hidden=state.offset===0;
+ $("national-next").hidden=state.items.length<PAGE_SIZE||state.offset+state.items.length>=state.total;
+ $("national-download").disabled=!state.items.length;
+ const uf=$("national-uf").value;
+ const coverageUnknown=state.coverageState!=="loaded";
+ const knownMissing=state.coverageState==="loaded"&&uf&&
+   !state.coverage.some(x=>x.uf===uf&&x.last_success_at&&
+     Number.isFinite(Date.parse(x.last_success_at))&&Date.parse(x.last_success_at)<=Date.now());
+ $("national-empty").hidden=state.items.length>0;
+ $("national-empty-title").textContent=uf&&coverageUnknown?"Cobertura do estado não verificada":
+   knownMissing?"Coleta ainda não concluída para "+STATES[uf]:"Nenhum registro neste filtro";
+ $("national-empty-description").textContent=uf&&coverageUnknown?
+  "Não conseguimos consultar o status de coleta agora. Isso não significa que não existam editais no estado. Use também o PNCP.":
+  knownMissing?
+  "Este estado está configurado, mas ainda não há amostra validada. Consulte diretamente o PNCP enquanto expandimos a cobertura.":
+  "Experimente ampliar os filtros. A base é amostral e a situação do edital pode mudar.";
+}
+function args(){
+ const focus=$("national-focus").value;
+ const days=$("national-deadline").value;
+ const amount=$("national-min").value;
+ return {p_q:$("national-q").value.trim().slice(0,120)||null,p_uf:$("national-uf").value||null,
+  p_city:$("national-city").value.trim().slice(0,90)||null,
+  p_focus:focus===""?null:focus==="true",
+  p_days:days?Number(days):null,p_min_value:amount?Math.max(0,Number(amount)):null,
+  p_sort:$("national-sort").value,p_limit:PAGE_SIZE,p_offset:state.offset};
+}
+async function search(){
+ if(state.request)state.request.abort();
+ const ctrl=new AbortController();state.request=ctrl;state.loading=true;
+ $("national-submit").disabled=true;$("national-status").textContent="Consultando base nacional...";
+ $("national-result-count").textContent="Buscando...";
+ try{
+  const response=await fetch(API+"/rpc/editalume_search",{method:"POST",headers:{"apikey":KEY,"Content-Type":"application/json"},body:JSON.stringify(args()),signal:ctrl.signal,cache:"no-store"});
+  if(!response.ok)throw new Error("HTTP "+response.status);
+  const rows=await response.json();if(!Array.isArray(rows))throw Error("Resposta inesperada");
+  if(state.request!==ctrl)return;
+  state.items=rows.filter(r=>official(r));state.total=Number(rows[0]?.total_count)||0;
+  $("national-status").textContent="Base de dados independente conectada. Cobertura nacional em expansão; resultados não são uma lista exaustiva.";
+  renderCards();
+ }catch(err){
+  if(err.name==="AbortError")return;
+  if(state.request!==ctrl)return;
+  empty($("national-results"));state.items=[];state.total=0;
+  $("national-result-count").textContent="Conexão indisponível";
+  $("national-status").textContent="Não foi possível consultar o Supabase agora. O acervo paulista abaixo permanece disponível; para dados completos use o PNCP.";
+  $("national-page-indicator").textContent="";
+  $("national-next").hidden=true;$("national-prev").hidden=true;$("national-download").disabled=true;
+  $("national-empty").hidden=false;$("national-empty-title").textContent="Falha temporária de conexão";
+  $("national-empty-description").textContent="Tente novamente ou consulte a fonte oficial.";
+ }finally{if(state.request===ctrl){state.loading=false;$("national-submit").disabled=false;}}
+}
+// A share URL contains search filters only. Copying is always deliberate:
+// do not put customer identity, keys, tokens or saved private searches in URLs.
+function restoreSharedSearch(){
+ const params=new URL(location.href).searchParams;
+ for(const [param,element,limit] of [["q","national-q",120],["city","national-city",90]]){
+  const value=params.get(param);
+  if(value&&value.length<=limit)$(element).value=value;
+ }
+ const uf=params.get("uf");
+ if(uf&&Object.prototype.hasOwnProperty.call(STATES,uf))$("national-uf").value=uf;
+ const focus=params.get("focus");
+ if(["true","false"].includes(focus))$("national-focus").value=focus;
+ const days=params.get("days");
+ if(["7","15","30"].includes(days))$("national-deadline").value=days;
+ const min=params.get("min");
+ if(min&&/^\d+(?:\.\d{1,2})?$/.test(min)&&Number(min)<=100000000)$("national-min").value=min;
+ const sort=params.get("sort");
+ if(["deadline","value","relevance"].includes(sort))$("national-sort").value=sort;
+}
+function sharedSearchUrl(){
+ const link=new URL(location.href);
+ link.search="";link.hash="brasil";
+ const pairs=[["q","national-q"],["uf","national-uf"],["city","national-city"],
+   ["focus","national-focus"],["days","national-deadline"],["min","national-min"],["sort","national-sort"]];
+ for(const [param,element] of pairs){
+  const value=$(element).value.trim();
+  if(value&&(param!=="sort"||value!=="deadline"))link.searchParams.set(param,value);
+ }
+ return link.toString();
+}
+async function copySearchLink(){
+ const url=sharedSearchUrl();
+ const fallback=$("national-share-fallback"),status=$("national-share-status");
+ try{
+  if(!navigator.clipboard?.writeText)throw new Error("clipboard_unavailable");
+  await navigator.clipboard.writeText(url);
+  fallback.hidden=true;status.textContent="Link da busca copiado. Confira os filtros antes de enviar.";
+ }catch{
+  fallback.value=url;fallback.hidden=false;fallback.focus();fallback.select();
+  status.textContent="Seu navegador bloqueou a cópia. Selecione e copie o link abaixo.";
+ }
+}
+let debounce=null;
+function filtersChanged(){state.offset=0;clearTimeout(debounce);debounce=setTimeout(()=>{renderCoverage();search()},300)}
+function csvCell(v){let s=String(v??"").replace(/[\r\n]/g," ").trim();if(/^[\s]*[=+\-@]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'}
+function downloadPage(){
+ if(!state.items.length)return;
+ const rows=[["Controle PNCP","Título","Órgão","Município","UF","Categoria sugerida","Modalidade","Prazo informado","Valor estimado BRL","Último registro","Edital oficial"]];
+ for(const r of state.items){const url=official(r);if(!url)continue;
+  rows.push([r.pncp_id,r.title,r.agency,r.municipality,r.uf,category(r.title),r.modality,r.closing_at,r.estimated_value_brl??"",r.last_observed_at,url]);}
+ const blob=new Blob(["\ufeff",rows.map(row=>row.map(csvCell).join(";")).join("\r\n")],{type:"text/csv;charset=utf-8"});
+ const url=URL.createObjectURL(blob),a=node("a");a.href=url;a.download="editalume-brasil-pagina.csv";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+async function loadCoverage(){
+ try{
+  const response=await fetch(API+"/editalume_uf_coverage?select=uf,status,last_success_at,records_examined&order=uf.asc",
+   {headers:{"apikey":KEY},cache:"no-store"});
+  if(!response.ok)throw new Error("HTTP "+response.status);
+  const rows=await response.json();
+  const expected=Object.keys(STATES);
+  // Duplicated, missing or unknown rows are not a trustworthy coverage report.
+  if(!Array.isArray(rows)||rows.length!==expected.length||
+     new Set(rows.map(r=>r?.uf)).size!==expected.length||
+     rows.some(r=>!expected.includes(r?.uf)))throw new Error("Coverage incomplete");
+  state.coverage=rows;
+  state.coverageState="loaded";
+ }catch(_err){
+  state.coverage=[];
+  state.coverageState="error";
+ }
+ renderCoverage();
+}
+function init(){
+ if(!$("national-form"))return;
+ window.addEventListener("editalume-account-changed",()=>{
+   const account=window.EditalumeAccount;
+   state.saved=account?.user?account.favorites.map(cleanBookmark).filter(Boolean):loadBookmarks();
+   renderBookmarks();renderCards();
+ });
+ state.saved=loadBookmarks();
+ renderBookmarks();
+ $("national-show-saved").addEventListener("click",()=>{
+  const panel=$("national-saved-panel"),open=panel.hidden;
+  panel.hidden=!open;
+  $("national-show-saved").setAttribute("aria-expanded",String(open));
+  if(open)renderBookmarks();
+ });
+ const picker=$("national-uf");for(const [uf,name] of Object.entries(STATES)){const o=node("option",null,name+" ("+uf+")");o.value=uf;picker.append(o)}
+ restoreSharedSearch();
+ $("national-form").addEventListener("submit",event=>{event.preventDefault();state.offset=0;clearTimeout(debounce);renderCoverage();search()});
+ for(const id of ["national-q","national-city","national-uf","national-focus","national-deadline","national-min","national-sort"]){
+  $(id).addEventListener(id==="national-q"||id==="national-city"||id==="national-min"?"input":"change",filtersChanged);
+ }
+ $("national-reset").addEventListener("click",()=>{$("national-form").reset();state.offset=0;renderCoverage();search()});
+ $("national-share").addEventListener("click",copySearchLink);
+ $("national-next").addEventListener("click",()=>{state.offset+=PAGE_SIZE;search();$("national-result-count").scrollIntoView({behavior:"smooth",block:"center"})});
+ $("national-prev").addEventListener("click",()=>{state.offset=Math.max(0,state.offset-PAGE_SIZE);search();$("national-result-count").scrollIntoView({behavior:"smooth",block:"center"})});
+ $("national-download").addEventListener("click",downloadPage);
+ renderCoverage();loadCoverage();search();
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+})();

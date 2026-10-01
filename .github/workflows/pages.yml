@@ -1,0 +1,66 @@
+name: Editalume · independent GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */4 * * *'
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: editalume-site-pages
+  cancel-in-progress: true
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Checkout standalone site
+        uses: actions/checkout@v4
+      - name: Download public fallback snapshots from existing collector
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in opportunities.json search-index.json refresh-status.json; do
+            url="https://raw.githubusercontent.com/caueccipriano/mylife-caue-app/main/public/radar/$name"
+            curl --fail --location --retry 3 --max-time 35 "$url" -o "site/$name.tmp"
+            python3 -m json.tool "site/$name.tmp" >/dev/null
+            mv "site/$name.tmp" "site/$name"
+          done
+      - name: Verify required independent files
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in index.html conta.html avaliar.html privacidade.html manifest.webmanifest sw.js icon.svg account.js national.js app.js; do
+            test -s "site/$file"
+          done
+          node --check site/account.js
+          node --check site/account-bridge.js
+          node --check site/national.js
+          node --check site/app.js
+          node --check site/sw.js
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("site")
+          m=json.loads((p/"manifest.webmanifest").read_text())
+          assert m["id"]=="./" and m["scope"]=="./" and m["start_url"].startswith("./")
+          for item in m["icons"]:assert (p/item["src"]).is_file()
+          html=(p/"index.html").read_text()
+          assert 'href="./conta.html"' in html and 'R$ 49,90' in html
+          assert "mylife-caue-app/radar/" not in html
+          print("PASS independent Editalume publishing artifact")
+          PY
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Editalume static site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - name: Deploy
+        id: deploy
+        uses: actions/deploy-pages@v4
