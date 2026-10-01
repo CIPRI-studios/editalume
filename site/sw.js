@@ -1,8 +1,8 @@
 /* Editalume-specific app-shell worker. Never intercept Supabase or PNCP data. */
 const PREFIX="editalume-shell-";
-const VERSION=PREFIX+"pro-export-20261001-1";
-const SHELL=["./","./index.html","./plan-policy.js?v=2","./style.css?v=br-20260929-2",
-"./national.css?v=freemium-20261001-2","./app.js?v=freemium-20261001-1",
+const VERSION=PREFIX+"sp-free-consistency-20261001-1";
+const SHELL=["./","./index.html","./plan-policy.js?v=2","./style.css?v=free-sp-20261001-1",
+"./national.css?v=freemium-20261001-2","./app.js?v=free-sp-20261001-1",
 "./national.js?v=freemium-20261001-4",
 "./account-bridge.js?v=4","./account.js?v=4","./account.css?v=3","./conta.html","./privacidade.html","./icon.svg",
 "./manifest.webmanifest?v=br-20260929-4"];

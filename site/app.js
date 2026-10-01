@@ -5,6 +5,20 @@ No tracking, user account, or submission. Official documents always prevail. */
 const $ = id => document.getElementById(id);
 const isPro=()=>window.EditalumePlanPolicy?.canUsePro(window.EditalumeAccount)===true;
 const freePreview=5;
+
+function syncTierControls(){
+ const premium=isPro();
+ $("sp-advanced").disabled=!premium;
+ $("minValue").disabled=!premium;
+ $("sort").disabled=!premium;
+ $("sp-upgrade-tip").hidden=premium;
+ if(!premium){
+   $("segment").value="all";$("city").value="";$("modality").value="";
+   $("deadline").value="all";$("minValue").value="";$("sort").value="deadline";
+   $("observedOnly").checked=true;
+ }
+}
+
 const fmt=new Intl.NumberFormat("pt-BR");
 const money=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
 const dt=new Intl.DateTimeFormat("pt-BR",{dateStyle:"short",timeStyle:"short",timeZone:"America/Sao_Paulo"});
@@ -66,18 +80,20 @@ function card(record){
  aside.append(details,a);el.append(left,aside);return el;
 }
 function search(){
- const q=norm($("q").value).trim(),seg=$("segment").value,city=$("city").value,
- mod=$("modality").value,days=$("deadline").value,min=Math.max(0,Number($("minValue").value)||0);
+ const premium=isPro();
+ const q=norm($("q").value).trim(),seg=premium?$("segment").value:"all",city=premium?$("city").value:"",
+ mod=premium?$("modality").value:"",days=premium?$("deadline").value:"all",
+ min=premium?Math.max(0,Number($("minValue").value)||0):0;
  const now=Date.now(),until=days==="all"?Infinity:now+Number(days)*86400000;
  let arr=data.filter(r=>{
   let end=Date.parse(r.deadline);
   return Number.isFinite(end)&&end>now&&end<=until&&
-    (!$("observedOnly").checked || (!!lastIndexedAt && r.last_seen_at===lastIndexedAt))&&
+    (!premium||!$("observedOnly").checked || (!!lastIndexedAt && r.last_seen_at===lastIndexedAt))&&
     group(r,seg)&&(!city||r.city===city)&&(!mod||r.modality===mod)&&
     (!min||(Number(r.estimated_value_brl)||0)>=min)&&
     (!q||norm([r.object,r.organ,r.city,r.modality,r.id].join(" ")).includes(q));
  });
- const sort=$("sort").value;
+ const sort=premium?$("sort").value:"deadline";
  arr.sort((a,b)=>sort==="value"?(Number(b.estimated_value_brl)||0)-(Number(a.estimated_value_brl)||0)||Date.parse(a.deadline)-Date.parse(b.deadline):
  sort==="relevance"?(Number(b.relevance)||0)-(Number(a.relevance)||0)||Date.parse(a.deadline)-Date.parse(b.deadline):Date.parse(a.deadline)-Date.parse(b.deadline));
  return arr;
@@ -126,7 +142,7 @@ $("filters").addEventListener("reset",()=>setTimeout(()=>render(true),0));
 for(const key of ["q","segment","city","modality","deadline","minValue","observedOnly"])$(key).addEventListener("input",()=>render(true));
 $("sort").addEventListener("change",()=>render(false));
 $("more").addEventListener("click",()=>{if(!isPro())return;visible+=12;render(false);});
-window.addEventListener("editalume-account-changed",()=>{if(ready)render(true);});
+window.addEventListener("editalume-account-changed",()=>{syncTierControls();if(ready)render(true);});
 $("previewAlert").addEventListener("click",()=>{
  $("alertPreview").hidden=false;$("previewAlert").setAttribute("aria-expanded","true");
  updatePreview();$("alertPreview").scrollIntoView({behavior:"smooth",block:"start"});
@@ -216,5 +232,6 @@ async function init(){
   $("resultsCount").textContent="Base temporariamente indisponível";$("shown").textContent="A coleta não foi confirmada.";$("empty").hidden=false;
  }
 }
+syncTierControls();
 init();
 })();

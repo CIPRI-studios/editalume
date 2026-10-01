@@ -128,3 +128,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{ou
 
 .plan-premium .plan-action.button-outline{color:#f4f8f1;border-color:#b9d5c1;background:transparent}
 .plan-premium .plan-action.button-outline:hover{background:#285443;color:#fff;border-color:#d3e6d8}
+
+/* Consistent Free preview also in the complementary public São Paulo snapshot. */
+#sp-advanced{border:0;margin:0;padding:0;min-inline-size:0}
+#sp-advanced:disabled{opacity:.48}
+.sp-upgrade-tip{padding:15px 19px;margin:5px 0 20px;border:1px solid #c7dec9;border-radius:10px;background:#f1f8ef;color:#2a5437;font:600 12px/1.6 'DM Sans',sans-serif}
+.sp-upgrade-tip a{font-weight:850;color:#225b3a}
+.sp-upgrade-tip[hidden]{display:none}
