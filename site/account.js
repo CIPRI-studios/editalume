@@ -20,7 +20,7 @@
    "sb_publishable_O85v7HRJg7br9kxUbvticw_NNO8jp4w",
    {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:"implicit"}}
  );
- const state={user:null,favorites:[],pro:false,error:null};
+ const state={user:null,favorites:[],savedSearches:[],pro:false,error:null};
  const emit=()=>window.dispatchEvent(new CustomEvent("editalume-account-changed"));
  const official=id=>{
    const match=/^(\d{14})-\d+-(\d+)\/(\d{4})$/.exec(id||"");
@@ -34,12 +34,51 @@
    if(error)throw new Error("Não foi possível consultar os favoritos da conta.");
    state.favorites=data||[];
  }
+ async function loadSavedSearches(){
+   if(!state.pro){state.savedSearches=[];return;}
+   const {data,error}=await client.from("editalume_saved_searches")
+     .select("id,name,search_text,uf,city,sector_focus,min_value,deadline_days,created_at")
+     .eq("user_id",state.user.id).order("created_at",{ascending:false}).limit(3);
+   if(error)throw new Error("Não foi possível consultar suas pesquisas Pro.");
+   state.savedSearches=data||[];
+ }
+ async function createSavedSearch(raw){
+   if(!state.user||!state.pro)throw new Error("Apenas contas Pro verificadas podem salvar pesquisas.");
+   if(state.savedSearches.length>=3)throw new Error("Você já possui três pesquisas Pro. Remova uma antes de salvar outra.");
+   const name=String(raw?.name||"").trim();
+   if(name.length<2||name.length>60)throw new Error("Informe um nome entre 2 e 60 caracteres.");
+   const uf=typeof raw?.uf==="string"&&/^[A-Z]{2}$/.test(raw.uf)?raw.uf:null;
+   const days=raw?.deadline_days==null?null:Number(raw.deadline_days);
+   const payload={
+     user_id:state.user.id,name,
+     search_text:String(raw?.search_text||"").trim().slice(0,120)||null,
+     uf,city:String(raw?.city||"").trim().slice(0,90)||null,
+     sector_focus:typeof raw?.sector_focus==="boolean"?raw.sector_focus:null,
+     min_value:Number.isFinite(Number(raw?.min_value))&&raw?.min_value!=null?Math.max(0,Number(raw.min_value)):null,
+     deadline_days:Number.isInteger(days)&&days>=1&&days<=90?days:null,
+     alerts_enabled:false
+   };
+   const {error}=await client.from("editalume_saved_searches").insert(payload);
+   if(error)throw new Error(/three|maximum|limite/i.test(error.message)
+     ?"Limite de três pesquisas atingido.": "Não foi possível salvar. Confirme se sua assinatura Pro está ativa.");
+   await loadSavedSearches();render();emit();
+   return true;
+ }
+ async function deleteSavedSearch(id){
+   if(!state.user||!state.pro||!state.savedSearches.some(x=>x.id===id))
+     throw new Error("Esta pesquisa não está disponível na sua conta Pro.");
+   const {error}=await client.from("editalume_saved_searches").delete()
+     .eq("user_id",state.user.id).eq("id",id);
+   if(error)throw new Error("Não foi possível excluir esta pesquisa.");
+   await loadSavedSearches();render();emit();
+   return true;
+ }
  async function reload(){
    try{
      const {data:{session},error:sessionError}=await client.auth.getSession();
      if(sessionError)throw sessionError;
      if(!session){
-       state.user=null;state.favorites=[];state.pro=false;state.error=null;
+       state.user=null;state.favorites=[];state.savedSearches=[];state.pro=false;state.error=null;
        render();emit();return;
      }
      const {data:{user},error:userError}=await client.auth.getUser();
@@ -50,11 +89,12 @@
      if(entError)throw entError;
      state.pro=!!(ent?.plan==="premium"&&ent?.last_verified_at&&
        ent?.active_until&&Date.parse(ent.active_until)>Date.now());
-     await loadFavorites();
+     await loadFavorites();await loadSavedSearches();
      state.error=null;render();emit();
    }catch(_err){
-     state.error="Não foi possível carregar a conta ou os favoritos. Tente atualizar a página.";
-     announce(state.error,true);emit();
+     state.pro=false;state.savedSearches=[];
+     state.error="Não foi possível validar a conta neste momento. Recursos Pro temporariamente bloqueados.";
+     render();announce(state.error,true);emit();
    }
  }
  function guestFavorites(){
@@ -84,7 +124,8 @@
    return !exists;
  }
  const api={get user(){return state.user},get favorites(){return state.favorites},
-   get isPro(){return state.pro},toggleFavorite,refresh:reload};
+   get savedSearches(){return state.savedSearches},get isPro(){return state.pro},
+   toggleFavorite,createSavedSearch,deleteSavedSearch,refresh:reload};
  window.EditalumeAccount=Object.freeze(api);
  function renderFavorites(){
    const root=$("account-favorites");if(!root)return;
@@ -107,6 +148,48 @@
      actions.append(link,remove);card.append(title,detail,actions);root.append(card);
    }
  }
+
+ function renderSavedSearches(){
+   const panel=$("account-pro-searches"),root=$("account-pro-searches-list");
+   if(!panel||!root)return;
+   panel.hidden=!state.pro;
+   if(!state.pro)return;
+   root.replaceChildren();
+   const count=$("account-pro-searches-count");
+   if(count)count.textContent=state.savedSearches.length+" / 3 pesquisas";
+   if(!state.savedSearches.length){
+     const p=document.createElement("p");
+     p.textContent="Nenhuma pesquisa salva. Crie sua primeira pesquisa estratégica no radar nacional.";
+     root.append(p);return;
+   }
+   for(const item of state.savedSearches){
+     const card=document.createElement("article");card.className="pro-search";
+     const main=document.createElement("div");main.className="pro-search-main";
+     const title=document.createElement("strong");title.textContent=item.name;
+     const detail=document.createElement("small");
+     detail.textContent=[item.uf||"Brasil",item.city||"",item.search_text||""].filter(Boolean).join(" · ");
+     main.append(title,detail);
+     const actions=document.createElement("div");actions.className="pro-search-actions";
+     const link=document.createElement("a");link.textContent="Abrir busca ↗";
+     const url=new URL("./",window.location.href);
+     url.hash="brasil";
+     const pairs=[["q",item.search_text],["uf",item.uf],["city",item.city],
+      ["focus",typeof item.sector_focus==="boolean"?String(item.sector_focus):""],
+      ["days",item.deadline_days],["min",item.min_value]];
+     for(const [key,value] of pairs)if(value!==null&&value!==undefined&&value!=="")
+       url.searchParams.set(key,String(value));
+     link.href=url.href;
+     const remove=document.createElement("button");remove.type="button";remove.textContent="Excluir";
+     remove.setAttribute("aria-label","Excluir pesquisa: "+item.name);
+     remove.addEventListener("click",async()=>{
+       if(!window.confirm("Excluir a pesquisa "+item.name+"?"))return;
+       remove.disabled=true;
+       try{await deleteSavedSearch(item.id);announce("Pesquisa excluída.");}
+       catch(error){announce(error.message,true);remove.disabled=false;}
+     });
+     actions.append(link,remove);card.append(main,actions);root.append(card);
+   }
+ }
  function render(){
    const logged=!!state.user,login=$("account-login"),panel=$("account-panel");
    if(login)login.hidden=logged;if(panel)panel.hidden=!logged;
@@ -116,7 +199,7 @@
      $("account-plan-note").textContent=state.pro
        ?"Acesso Pro verificado. Alertas por e-mail serão liberados somente quando o serviço estiver operacional."
        :"Sua conta gratuita permite até cinco favoritos sincronizados. A assinatura Pro está em preparação.";
-     renderFavorites();
+     renderFavorites();renderSavedSearches();
      const importButton=$("account-import");
      if(importButton){
        const pending=guestFavorites().filter(x=>!state.favorites.some(f=>f.pncp_id===x.pncp_id));

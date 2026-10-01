@@ -44,6 +44,8 @@ jobs:
           node --check site/national.js
           node --check site/app.js
           node --check site/sw.js
+          node --check site/plan-policy.js
+          node tests/freemium-policy.cjs
           node tests/password-flow.cjs
           python3 - <<'PY'
           import json,pathlib

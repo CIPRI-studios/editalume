@@ -8,3 +8,21 @@
 .password-status{font-size:13px;min-height:1.3em;margin-bottom:0}
 .password-status.error{color:#893c2d}
 .password-status.success{color:#195c39;font-weight:750}
+
+/* Private Pro saved searches dashboard. */
+.pro-searches{margin:26px 0;padding:22px;border:1px solid #b6d7bb;border-radius:13px;background:#f0f7ed}
+.pro-searches[hidden]{display:none}
+.pro-searches-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.pro-searches-head h3{font-size:18px;letter-spacing:-.03em;margin:5px 0}
+.pro-searches-head span:last-child{font-size:11px;font-weight:850;color:#356b46}
+.pro-searches>p{font-size:12px;line-height:1.6}
+.pro-searches .cta{font-size:12px;padding:11px 14px}
+.pro-searches-list{display:grid;gap:11px;margin:15px 0}
+.pro-search{background:#fff;border:1px solid #d5e4d3;border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.pro-search-main{display:flex;flex-direction:column;gap:4px}
+.pro-search-main strong{color:#204b37;font-size:13px}
+.pro-search-main small{color:#56715c;font-size:11px}
+.pro-search-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pro-search-actions a{background:#204b37;color:#fff;text-decoration:none;font-size:11px;border-radius:8px;padding:10px 12px;font-weight:800}
+.pro-search-actions button{font-size:11px;background:#edf3ed;color:#204b37;padding:10px 12px}
+@media(max-width:600px){.pro-search{align-items:stretch;flex-direction:column}.pro-search-actions a,.pro-search-actions button{flex:1;text-align:center}}

@@ -16,10 +16,11 @@
 <meta property="og:description" content="Da informação à oportunidade. Um ambiente para descobrir licitações relevantes com clareza.">
 <title>Editalume | Inteligência em oportunidades públicas</title>
 <link rel="stylesheet" href="./style.css?v=br-20260929-2">
-<link rel="stylesheet" href="./national.css?v=br-20260930-7">
-<script src="./app.js?v=br-20260929-2" defer></script>
-<script src="./national.js?v=br-20261001-accounts-1" defer></script>
-<script type="module" src="./account-bridge.js?v=2"></script>
+<link rel="stylesheet" href="./national.css?v=freemium-20261001-1">
+<script src="./plan-policy.js?v=1" defer></script>
+<script src="./app.js?v=freemium-20261001-1" defer></script>
+<script src="./national.js?v=freemium-20261001-1" defer></script>
+<script type="module" src="./account-bridge.js?v=3"></script>
 <script src="./pwa.js?v=br-20260929-4" defer></script>
 </head>
 <body>
@@ -74,22 +75,25 @@
 </section>
 <section class="national-section" id="brasil" aria-labelledby="national-title"><div class="container">
  <div class="national-heading"><div><div class="national-eyebrow">EDIÇÃO BRASIL · BASE NACIONAL</div><h2 id="national-title">De norte a sul.<br><span>Uma busca mais inteligente.</span></h2><p>Uma pesquisa única para as 27 unidades federativas. Veja exatamente onde já recebemos dados, sem confundir cobertura planejada com editais efetivamente coletados.</p></div><div class="national-progress-card" aria-live="polite"><span>ESTADOS COM DADOS RECEBIDOS</span><strong id="national-uf-count">—/27</strong><p id="national-coverage-description">Conectando ao catálogo...</p><small>O ritmo de expansão depende da disponibilidade da API oficial.</small></div></div>
- <div class="national-search-card"><div class="national-card-head"><div><span class="national-chip">CONSULTA GRATUITA</span><h3>Pesquisar editais pelo Brasil</h3><p>Filtros em tempo real, conectados ao banco independente Editalume.</p></div><span class="national-connected">● BANCO NACIONAL</span></div>
+ <div class="national-search-card"><div class="national-card-head"><div><span class="national-chip">GRÁTIS · EXPERIMENTE</span><h3>Descubra oportunidades pelo Brasil</h3><p>Pesquise por assunto e estado. O Pro reúne filtros estratégicos, pesquisas salvas e exportação.</p></div><span class="national-connected">● BANCO NACIONAL</span></div>
  <form id="national-form" role="search" aria-label="Pesquisar licitações na base nacional">
   <div class="national-primary-filters"><label class="national-query-field"><span>O que sua empresa procura?</span><input id="national-q" type="search" placeholder="Produto, serviço, órgão..." maxlength="120" autocomplete="off"></label><label><span>Estado</span><select id="national-uf"><option value="">Todo o Brasil (dados disponíveis)</option></select></label></div>
-  <div class="national-secondary-filters"><label><span>Município</span><input id="national-city" type="search" placeholder="Qualquer cidade" maxlength="90" autocomplete="off"></label><label><span>Setor</span><select id="national-focus"><option value="">Todos os setores</option><option value="true">Serviços monitorados</option><option value="false">Outros setores</option></select></label><label><span>Prazo</span><select id="national-deadline"><option value="">Qualquer prazo futuro</option><option value="7">7 dias</option><option value="15">15 dias</option><option value="30">30 dias</option></select></label><label><span>Valor mínimo (R$)</span><input id="national-min" type="number" min="0" step="100" inputmode="decimal" placeholder="0"></label></div>
-  <div class="national-action-row"><p>Sem login. Ao compartilhar, os filtros escolhidos ficarão visíveis no endereço.</p><div><button type="button" class="national-reset" id="national-reset">Limpar</button><button type="button" class="national-share" id="national-share">Copiar link da busca</button><button type="submit" class="national-submit" id="national-submit">Buscar oportunidades →</button></div></div><div class="national-share-feedback"><p id="national-share-status" role="status" aria-live="polite"></p><input id="national-share-fallback" aria-label="Link da busca para copiar" readonly hidden></div>
- </form></div>
+  <fieldset class="national-secondary-filters" id="national-advanced" disabled aria-describedby="national-locked"><label><span>Município</span><input id="national-city" type="search" placeholder="Qualquer cidade" maxlength="90" autocomplete="off"></label><label><span>Setor</span><select id="national-focus"><option value="">Todos os setores</option><option value="true">Serviços monitorados</option><option value="false">Outros setores</option></select></label><label><span>Prazo</span><select id="national-deadline"><option value="">Qualquer prazo futuro</option><option value="7">7 dias</option><option value="15">15 dias</option><option value="30">30 dias</option></select></label><label><span>Valor mínimo (R$)</span><input id="national-min" type="number" min="0" step="100" inputmode="decimal" placeholder="0"></label></fieldset>
+  <div class="national-locked" id="national-locked"><div><strong>Filtros estratégicos · Editalume Pro</strong><p>Município, setor, prazo e orçamento ficam disponíveis para contas Pro verificadas.</p></div><a href="#planos">Conhecer o Pro ↗</a></div>
+  <div class="national-action-row"><p>Grátis: prévia de até cinco resultados por pesquisa. Os editais públicos continuam disponíveis no PNCP.</p><div><button type="button" class="national-reset" id="national-reset">Limpar</button><button type="button" class="national-share" id="national-share">Copiar link da busca</button><button type="submit" class="national-submit" id="national-submit">Buscar oportunidades →</button></div></div><div class="national-share-feedback"><p id="national-share-status" role="status" aria-live="polite"></p><input id="national-share-fallback" aria-label="Link da busca para copiar" readonly hidden></div>
+ </form>
+ <div class="national-pro-tools" id="national-pro-tools" hidden><button id="national-save-search-toggle" type="button" aria-expanded="false" aria-controls="national-save-search-form">+ Salvar pesquisa Pro</button><form id="national-save-search-form" hidden><label for="national-save-search-name">Nome desta pesquisa</label><input id="national-save-search-name" maxlength="60" minlength="2" required placeholder="Ex.: Limpeza em SP, 30 dias"><button id="national-save-search-submit" type="submit">Salvar pesquisa ↗</button></form><p id="national-save-search-status" role="status" aria-live="polite">Até três pesquisas privadas. Os alertas automáticos ainda não estão ativos.</p></div></div>
  <div class="national-coverage-panel"><div class="national-coverage-head"><div><span class="national-eyebrow">TRANSPARÊNCIA POR ESTADO</span><h3>Onde já temos resultados</h3></div><p>Verde: amostra recebida. Cinza: aguardando. Toque na sigla para pesquisar.</p></div><div class="national-state-grid" id="national-state-grid" role="group" aria-label="Selecionar estado"></div></div>
  <div id="national-status" class="national-status" role="status" aria-live="polite">Carregando pesquisa nacional...</div>
- <div class="national-results-header"><div><span class="national-eyebrow">RESULTADOS DO BANCO</span><h3 id="national-result-count">Conectando...</h3></div><div class="national-results-actions"><button type="button" id="national-show-saved" aria-expanded="false" aria-controls="national-saved-panel">Meus salvos (<span id="national-saved-count">0</span>)</button><label for="national-sort">Ordenar</label><select id="national-sort" aria-label="Ordenar resultados nacionais"><option value="deadline">Prazo mais próximo</option><option value="value">Maior valor</option><option value="relevance">Relevância</option></select><button id="national-download" type="button" disabled>Exportar página ↓</button></div></div>
+ <div class="national-results-header"><div><span class="national-eyebrow">RESULTADOS DO BANCO</span><h3 id="national-result-count">Conectando...</h3></div><div class="national-results-actions"><button type="button" id="national-show-saved" aria-expanded="false" aria-controls="national-saved-panel">Meus salvos (<span id="national-saved-count">0</span>)</button><label for="national-sort">Ordenar</label><select id="national-sort" aria-label="Ordenar resultados nacionais"><option value="deadline">Prazo mais próximo</option><option value="value">Maior valor</option><option value="relevance">Relevância</option></select><button id="national-download" type="button" disabled title="Disponível no Pro">Exportar CSV · Pro ↓</button></div></div>
  <p class="national-save-status" id="national-save-status" role="status" aria-live="polite"></p>
  <section id="national-saved-panel" class="national-saved-panel" aria-label="Editais guardados neste dispositivo" hidden>
-  <h3>Meus salvos neste aparelho</h3><p>Sem conta ou sincronização. Se você limpar os dados do navegador ou trocar de aparelho, perderá esta lista. O prazo e a situação dos editais podem mudar: confira sempre no PNCP.</p>
+  <h3>Meus favoritos</h3><p id="national-saved-note">Sem conta, os favoritos ficam só neste dispositivo. Verifique sempre os editais no PNCP.</p>
   <div id="national-saved-list" class="national-saved-list"></div><p id="national-saved-empty">Nenhum edital salvo ainda. Selecione ☆ Salvar nos resultados.</p>
  </section>
  <div class="national-results" id="national-results" aria-live="polite"></div><div id="national-empty" class="national-empty" hidden><h3 id="national-empty-title">Nenhum registro neste filtro</h3><p id="national-empty-description">Experimente ampliar a pesquisa.</p><a href="https://pncp.gov.br/app/editais" target="_blank" rel="noopener noreferrer">Consultar o PNCP ↗</a></div>
  <div class="national-pagination"><p id="national-page-indicator">Preparando resultados...</p><div class="national-page-buttons"><button type="button" id="national-prev" hidden>← Anterior</button><button type="button" id="national-next" hidden>Próxima página →</button></div></div>
+ <div class="national-free-upsell" id="national-free-upsell"><div><strong>Esta é sua prévia gratuita.</strong><p>O Pro oferece navegação ampliada, filtros inteligentes, CSV e pesquisas privadas. Os editais originais continuam públicos no PNCP.</p></div><a href="#planos">Conhecer o Pro ↗</a></div>
  <p class="national-legal">Fonte: Portal Nacional de Contratações Públicas (PNCP). Base independente e amostral, não exaustiva; prazos e situações podem mudar. Sempre confira o edital oficial.</p>
 </div></section>
 <section class="search-section section" id="pesquisa">
@@ -143,15 +147,15 @@
     <span class="plan-label">DISPONÍVEL AGORA</span>
     <h3>Explorar</h3><div class="plan-price">Grátis</div>
     <p class="plan-description">Consulte nossa base pública amostral e crie uma conta gratuita para acessar seus favoritos de outros dispositivos.</p>
-    <ul><li>Pesquisa pública por assunto, estado e município</li><li>Links oficiais do PNCP e dados disponíveis na amostra</li><li>Até cinco favoritos sincronizados por conta</li><li>Sem pagamento nem assinatura para pesquisar</li></ul>
+    <ul><li>Pesquisa básica por assunto e estado</li><li>Prévia de cinco resultados por pesquisa, com link para o edital oficial</li><li>Até cinco favoritos na conta; três sem cadastro neste navegador</li><li>Sem cartão e sem cobrança para experimentar</li></ul>
     <a class="button button-outline plan-action" href="./conta.html">Criar minha conta gratuita ↗</a>
   </article>
   <article class="plan-card plan-premium" aria-label="Plano Pro em preparação ainda indisponível para assinatura">
     <span class="plan-label">ÚNICO PLANO PAGO · EM PREPARAÇÃO</span>
     <h3>Editalume Pro</h3><div class="plan-price">R$ 49,90 <small>/ mês · preço planejado</small></div>
     <p class="plan-description">Seu radar de oportunidades, sem precisar repetir buscas manualmente todos os dias.</p>
-    <ul><li>Até três pesquisas inteligentes personalizadas e salvas</li><li>E-mail diário com novas oportunidades compatíveis e sem repetição desnecessária</li><li>Alertas de prazos, histórico e exportação avançada</li><li>Até 200 favoritos privados sincronizados entre dispositivos</li></ul>
-    <div class="plan-pending" role="note">O Pro está em desenvolvimento. As pesquisas personalizadas, os e-mails diários, os alertas e a cobrança recorrente ainda não estão ativos. Não será cobrado nada ao criar uma conta.</div>
+    <ul><li>Busca ampliada com filtros por município, setor, orçamento e prazo</li><li>Navegação ampliada, ordenação por valor/relevância e CSV por página</li><li>Até três pesquisas personalizadas salvas na sua conta</li><li>Até 200 favoritos privados sincronizados entre dispositivos</li><li><strong>Em desenvolvimento:</strong> e-mails diários, alertas e monitoramento automático</li></ul>
+    <div class="plan-pending" role="note">As ferramentas Pro serão ativadas somente para acessos verificados. E-mails diários, alertas e cobrança recorrente continuam em desenvolvimento. Não será cobrado nada ao criar uma conta.</div>
     <a class="button button-primary plan-action" href="mailto:cipristudios@gmail.com?subject=Lista%20de%20interesse%20Editalume%20Pro%20R%24%2049%2C90">Quero saber quando o Pro estiver pronto ↗</a>
   </article>
  </div>

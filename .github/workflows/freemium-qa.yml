@@ -1,0 +1,27 @@
+name: Editalume · freemium contract QA
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  freemium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate Freemium and existing account
+        run: |
+          node --check site/plan-policy.js
+          node --check site/account.js
+          node --check site/national.js
+          node --check site/app.js
+          node --check site/sw.js
+          node tests/freemium-policy.cjs
+          node tests/password-flow.cjs
