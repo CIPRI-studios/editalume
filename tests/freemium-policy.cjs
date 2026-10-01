@@ -67,7 +67,7 @@ assert(app.includes('const sort=premium?$("sort").value:"deadline"'),"Free SP or
 assert(html.includes('id="sp-advanced" disabled'),"SP advanced filters disabled for guests");
 assert(html.includes('id="sp-upgrade-tip"'),"SP Free upgrade explanation available");
 const sw=fs.readFileSync("site/sw.js","utf8");
-assert(sw.includes("sp-free-consistency-20261001-1")&&sw.includes("plan-policy.js?v=2"));
+assert(sw.includes("release-copy-20261001-1")&&sw.includes("plan-policy.js?v=2"));
 assert(sw.includes("style.css?v=free-sp-20261001-1")&&sw.includes("app.js?v=free-sp-20261001-1"));
 assert(sw.includes("account.js?v=4")&&sw.includes("national.js?v=freemium-20261001-4"));
 assert(national.includes('headers.Authorization="Bearer "+token'),"Pro requests must send a Supabase JWT to the backend");
