@@ -3,6 +3,8 @@ No tracking, user account, or submission. Official documents always prevail. */
 (function() {
 "use strict";
 const $ = id => document.getElementById(id);
+const isPro=()=>window.EditalumePlanPolicy?.canUsePro(window.EditalumeAccount)===true;
+const freePreview=5;
 const fmt=new Intl.NumberFormat("pt-BR");
 const money=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
 const dt=new Intl.DateTimeFormat("pt-BR",{dateStyle:"short",timeStyle:"short",timeZone:"America/Sao_Paulo"});
@@ -81,13 +83,17 @@ function search(){
  return arr;
 }
 function render(reset){
- if(!ready)return;if(reset)visible=12;found=search();resetChildren($("results"));
+ if(!ready)return;if(reset)visible=isPro()?12:freePreview;found=search();resetChildren($("results"));
  const frag=document.createDocumentFragment();
  for(const item of found.slice(0,visible)){try{const c=card(item);if(c)frag.append(c);}catch(e){/* invalid PNCP link is safely ignored */}}
  $("results").append(frag);
  $("resultsCount").textContent=fmt.format(found.length)+(found.length===1?" oportunidade encontrada":" oportunidades encontradas");
- $("shown").textContent="Exibindo "+fmt.format(Math.min(visible,found.length))+" de "+fmt.format(found.length)+" oportunidades nesta amostra.";
- $("more").hidden=visible>=found.length;$("empty").hidden=found.length!==0;$("csv").disabled=found.length===0;
+ $("shown").textContent=isPro()
+  ?"Exibindo "+fmt.format(Math.min(visible,found.length))+" de "+fmt.format(found.length)+" oportunidades nesta amostra.":
+  "Prévia gratuita: exibindo até cinco de "+fmt.format(found.length)+" oportunidades do acervo complementar.";
+ $("more").hidden=!isPro()||visible>=found.length;$("empty").hidden=found.length!==0;
+ $("csv").disabled=!isPro()||found.length===0;
+ $("csv").title=isPro()?"Exportar resultados desta amostra":"Exportação de dados disponível no Editalume Pro";
  if(!$("alertPreview").hidden)updatePreview();
 }
 function updatePreview(){
@@ -109,7 +115,7 @@ function csvSafe(value){
  return '"'+str.replace(/"/g,'""')+'"';
 }
 $("csv").onclick=()=>{
- if(!found.length)return;
+ if(!isPro()||!found.length)return;
  const rows=[["Órgão","Objeto","Município","UF","Modalidade","Prazo informado","Valor BRL","Controle PNCP","Link oficial"]];
  for(const r of found)rows.push([r.organ,r.object,r.city,r.uf||"SP",r.modality,r.deadline,r.estimated_value_brl??"",r.id,r.source_url]);
  const blob=new Blob(["\uFEFF",rows.map(r=>r.map(csvSafe).join(";")).join("\r\n")],{type:"text/csv;charset=utf-8"});
@@ -119,7 +125,8 @@ $("filters").addEventListener("submit",e=>{e.preventDefault();render(true);$("re
 $("filters").addEventListener("reset",()=>setTimeout(()=>render(true),0));
 for(const key of ["q","segment","city","modality","deadline","minValue","observedOnly"])$(key).addEventListener("input",()=>render(true));
 $("sort").addEventListener("change",()=>render(false));
-$("more").addEventListener("click",()=>{visible+=12;render(false);});
+$("more").addEventListener("click",()=>{if(!isPro())return;visible+=12;render(false);});
+window.addEventListener("editalume-account-changed",()=>{if(ready)render(true);});
 $("previewAlert").addEventListener("click",()=>{
  $("alertPreview").hidden=false;$("previewAlert").setAttribute("aria-expanded","true");
  updatePreview();$("alertPreview").scrollIntoView({behavior:"smooth",block:"start"});
