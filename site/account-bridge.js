@@ -2,6 +2,6 @@
    Guests retain local browsing; auth is offered at conta.html. */
 try{
  if(localStorage.getItem("sb-jhxhbgprjqppzfrjdfvj-auth-token")){
-   import("./account.js?v=3").catch(()=>{});
+   import("./account.js?v=4").catch(()=>{});
  }
 }catch(_ignored){}
