@@ -60,4 +60,7 @@ assert(app.includes('if(!isPro()||!found.length)return'));
 const sw=fs.readFileSync("site/sw.js","utf8");
 assert(sw.includes("freemium-20261001-1")&&sw.includes("plan-policy.js?v=1"));
 assert(sw.includes("account.js?v=3")&&sw.includes("national.js?v=freemium-20261001-1"));
+assert(national.includes('headers.Authorization="Bearer "+token'),"Pro requests must send a Supabase JWT to the backend");
+assert(account.includes("async function getAccessToken(){"),"Pro JWT token getter required");
+assert(account.includes("session?.user?.id===state.user.id"),"Never use a mismatched account token");
 console.log("PASS freemium: Free limited preview and official links; verified Pro filter, pagination and saved-search flow");
