@@ -1,0 +1,50 @@
+name: Editalume · responsive browser smoke
+on:
+  pull_request:
+    paths:
+      - 'site/**'
+      - 'tests/browser-smoke.cjs'
+      - '.github/workflows/browser-smoke.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'tests/browser-smoke.cjs'
+      - '.github/workflows/browser-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: editalume-browser-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pinned test runner
+        run: npm install --no-save --no-package-lock @playwright/test@1.55.0
+      - name: Install Chromium and Safari engine
+        run: npx playwright install --with-deps chromium webkit
+      - name: Start independent site with static fixtures supplied by test
+        run: |
+          node --check tests/browser-smoke.cjs
+          python3 -m http.server 4173 --directory site > /tmp/editalume-static-server.log 2>&1 &
+          for attempt in $(seq 1 25); do
+            curl --fail --silent http://127.0.0.1:4173/ >/dev/null && break
+            sleep 1
+          done
+          curl --fail http://127.0.0.1:4173/ -o /dev/null
+      - name: Check Free and simulated verified Pro on desktop, mobile and WebKit
+        run: node tests/browser-smoke.cjs
+      - name: Upload screenshots for visual review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: editalume-responsive-screens
+          path: tests/qa-artifacts/
+          if-no-files-found: warn
