@@ -58,9 +58,14 @@ const app=fs.readFileSync("site/app.js","utf8");
 assert(app.includes('visible=isPro()?12:freePreview'));
 assert(app.includes('if(!isPro()||!found.length)return'));
 const sw=fs.readFileSync("site/sw.js","utf8");
-assert(sw.includes("server-tiers-20261001-1")&&sw.includes("plan-policy.js?v=1"));
-assert(sw.includes("account.js?v=4")&&sw.includes("national.js?v=freemium-20261001-2"));
+assert(sw.includes("pro-insights-20261001-1")&&sw.includes("plan-policy.js?v=1"));
+assert(sw.includes("account.js?v=4")&&sw.includes("national.js?v=freemium-20261001-3"));
 assert(national.includes('headers.Authorization="Bearer "+token'),"Pro requests must send a Supabase JWT to the backend");
 assert(account.includes("async function getAccessToken(){"),"Pro JWT token getter required");
 assert(account.includes("session?.user?.id===state.user.id"),"Never use a mismatched account token");
-console.log("PASS freemium: Free limited preview and official links; verified Pro filter, pagination and saved-search flow");
+for(const id of ["national-insights","national-insights-title","national-insight-total","national-insight-urgent","national-insight-valued","national-insight-value","national-insight-cities"])
+ assert(html.includes('id="'+id+'"'),"Missing Pro insights element "+id);
+assert(national.includes('API+"/rpc/editalume_pro_insights"'),"Pro analytics must come from the server");
+assert(national.includes('if(isPro()&&token)void loadProInsights'),"Never call Pro analytics for Free");
+assert(national.includes('"Authorization":"Bearer "+token'),"Pro analytics needs authenticated JWT");
+console.log("PASS freemium: Free cap, verified Pro search and insight controls, saved searches and official source links");

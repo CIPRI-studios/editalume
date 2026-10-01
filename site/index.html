@@ -16,10 +16,10 @@
 <meta property="og:description" content="Da informação à oportunidade. Um ambiente para descobrir licitações relevantes com clareza.">
 <title>Editalume | Inteligência em oportunidades públicas</title>
 <link rel="stylesheet" href="./style.css?v=br-20260929-2">
-<link rel="stylesheet" href="./national.css?v=freemium-20261001-1">
+<link rel="stylesheet" href="./national.css?v=freemium-20261001-2">
 <script src="./plan-policy.js?v=1" defer></script>
 <script src="./app.js?v=freemium-20261001-1" defer></script>
-<script src="./national.js?v=freemium-20261001-2" defer></script>
+<script src="./national.js?v=freemium-20261001-3" defer></script>
 <script type="module" src="./account-bridge.js?v=4"></script>
 <script src="./pwa.js?v=br-20260929-4" defer></script>
 </head>
@@ -85,6 +85,17 @@
  <div class="national-pro-tools" id="national-pro-tools" hidden><button id="national-save-search-toggle" type="button" aria-expanded="false" aria-controls="national-save-search-form">+ Salvar pesquisa Pro</button><form id="national-save-search-form" hidden><label for="national-save-search-name">Nome desta pesquisa</label><input id="national-save-search-name" maxlength="60" minlength="2" required placeholder="Ex.: Limpeza em SP, 30 dias"><button id="national-save-search-submit" type="submit">Salvar pesquisa ↗</button></form><p id="national-save-search-status" role="status" aria-live="polite">Até três pesquisas privadas. Os alertas automáticos ainda não estão ativos.</p></div></div>
  <div class="national-coverage-panel"><div class="national-coverage-head"><div><span class="national-eyebrow">TRANSPARÊNCIA POR ESTADO</span><h3>Onde já temos resultados</h3></div><p>Verde: amostra recebida. Cinza: aguardando. Toque na sigla para pesquisar.</p></div><div class="national-state-grid" id="national-state-grid" role="group" aria-label="Selecionar estado"></div></div>
  <div id="national-status" class="national-status" role="status" aria-live="polite">Carregando pesquisa nacional...</div>
+ <section class="national-insights" id="national-insights" hidden aria-labelledby="national-insights-title">
+  <div class="national-insights-head"><div><span class="national-eyebrow">INTELIGÊNCIA EDITALUME · PRO</span><h3 id="national-insights-title">Leitura estratégica da sua busca</h3><p>Indicadores da amostra atualmente monitorada, aplicando seus filtros. Não representam todo o mercado nacional.</p></div><span class="national-insights-badge">PRO</span></div>
+  <div class="national-insights-grid">
+   <article><span>Oportunidades nesta amostra</span><strong id="national-insight-total">—</strong></article>
+   <article><span>Prazos registrados em até 7 dias</span><strong id="national-insight-urgent">—</strong></article>
+   <article><span>Oportunidades com valor informado</span><strong id="national-insight-valued">—</strong></article>
+   <article><span>Soma dos valores estimados informados</span><strong id="national-insight-value">—</strong></article>
+   <article><span>Municípios identificados</span><strong id="national-insight-cities">—</strong></article>
+  </div>
+  <p class="national-insights-foot" id="national-insights-status" role="status" aria-live="polite">Calculando indicadores...</p>
+ </section>
  <div class="national-results-header"><div><span class="national-eyebrow">RESULTADOS DO BANCO</span><h3 id="national-result-count">Conectando...</h3></div><div class="national-results-actions"><button type="button" id="national-show-saved" aria-expanded="false" aria-controls="national-saved-panel">Meus salvos (<span id="national-saved-count">0</span>)</button><label for="national-sort">Ordenar</label><select id="national-sort" aria-label="Ordenar resultados nacionais"><option value="deadline">Prazo mais próximo</option><option value="value">Maior valor</option><option value="relevance">Relevância</option></select><button id="national-download" type="button" disabled title="Disponível no Pro">Exportar CSV · Pro ↓</button></div></div>
  <p class="national-save-status" id="national-save-status" role="status" aria-live="polite"></p>
  <section id="national-saved-panel" class="national-saved-panel" aria-label="Editais guardados neste dispositivo" hidden>
