@@ -144,6 +144,51 @@
      finally{button.disabled=false;}
    });
  }
+
+ // Optional e-mail/password login. Magic Link remains available for first access and recovery.
+ if($("account-password-login-form")){
+   $("account-password-login-form").addEventListener("submit",async event=>{
+     event.preventDefault();
+     const emailInput=$("account-password-login-email"),secret=$("account-password-login-password"),button=$("account-password-login-button");
+     if(!emailInput.checkValidity()||!secret.value){announce("Informe seu e-mail e sua senha.",true);return;}
+     button.disabled=true;announce("Verificando acesso...");
+     try{
+       const {error}=await client.auth.signInWithPassword({email:emailInput.value.trim(),password:secret.value});
+       secret.value="";
+       if(error)throw error;
+       await reload();announce("Sua conta está conectada.");
+     }catch(_err){
+       secret.value="";
+       announce("Não foi possível entrar. Confira seus dados ou use o link por e-mail.",true);
+     }finally{button.disabled=false;}
+   });
+ }
+ // Passwords are sent only to Supabase Auth and never persisted in Editalume client storage.
+ if($("account-password-form")){
+   const passwordMessage=(message,error=false)=>{
+     const node=$("account-password-status");node.textContent=message;
+     node.classList.toggle("error",error);node.classList.toggle("success",!error);
+   };
+   $("account-password-form").addEventListener("submit",async event=>{
+     event.preventDefault();
+     if(!state.user){passwordMessage("Entre na sua conta antes de criar uma senha.",true);return;}
+     const first=$("account-new-password"),confirmation=$("account-confirm-password"),button=$("account-password-button");
+     if(first.value.length<12||first.value.length>72){passwordMessage("Use uma senha entre 12 e 72 caracteres.",true);return;}
+     if(first.value!==confirmation.value){passwordMessage("As duas senhas não coincidem.",true);return;}
+     button.disabled=true;passwordMessage("Salvando sua senha...");
+     try{
+       const {error}=await client.auth.updateUser({password:first.value});
+       if(error)throw error;
+       first.value="";confirmation.value="";
+       passwordMessage("Senha salva! Agora você também pode entrar com e-mail e senha.");
+     }catch(error){
+       first.value="";confirmation.value="";
+       if(/reauth|nonce|recent|current.password|not authenticated/i.test(error?.message||""))
+         passwordMessage("Confirme sua identidade: saia, entre novamente pelo link de e-mail e tente outra vez.",true);
+       else passwordMessage("Não foi possível salvar. Tente uma senha mais forte ou entre novamente pelo link.",true);
+     }finally{button.disabled=false;}
+   });
+ }
  if($("account-import")){
    $("account-import").addEventListener("click",async()=>{
      if(!state.user)return;

@@ -44,6 +44,7 @@ jobs:
           node --check site/national.js
           node --check site/app.js
           node --check site/sw.js
+          node tests/password-flow.cjs
           python3 - <<'PY'
           import json,pathlib
           p=pathlib.Path("site")
