@@ -7,6 +7,9 @@ const KEY="sb_publishable_O85v7HRJg7br9kxUbvticw_NNO8jp4w";
 const STATES={"AC":"Acre","AL":"Alagoas","AP":"Amapá","AM":"Amazonas","BA":"Bahia","CE":"Ceará","DF":"Distrito Federal","ES":"Espírito Santo","GO":"Goiás","MA":"Maranhão","MT":"Mato Grosso","MS":"Mato Grosso do Sul","MG":"Minas Gerais","PA":"Pará","PB":"Paraíba","PR":"Paraná","PE":"Pernambuco","PI":"Piauí","RJ":"Rio de Janeiro","RN":"Rio Grande do Norte","RS":"Rio Grande do Sul","RO":"Rondônia","RR":"Roraima","SC":"Santa Catarina","SP":"São Paulo","SE":"Sergipe","TO":"Tocantins"};
 const $=id=>document.getElementById(id);
 const PAGE_SIZE=12;
+const FREE_PAGE_SIZE=5;
+const isPro=()=>window.EditalumePlanPolicy?.canUsePro(window.EditalumeAccount)===true;
+const pageSize=()=>isPro()?PAGE_SIZE:FREE_PAGE_SIZE;
 const fmt=new Intl.NumberFormat("pt-BR"),money=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
 const dt=new Intl.DateTimeFormat("pt-BR",{dateStyle:"short",timeStyle:"short",timeZone:"America/Sao_Paulo"});
 const node=(tag,cls,txt)=>{let x=document.createElement(tag);if(cls)x.className=cls;if(txt!==undefined)x.textContent=String(txt);return x};
@@ -104,6 +107,9 @@ function updateBookmarks(items){
 }
 function renderBookmarks(){
  $("national-saved-count").textContent=fmt.format(state.saved.length);
+ const note=$("national-saved-note");if(note)note.textContent=window.EditalumeAccount?.user
+   ?"Favoritos sincronizados na sua conta. Confira os prazos no PNCP.":
+   "Sem conta, favoritos ficam só neste dispositivo e podem ser perdidos. Consulte o PNCP.";
  const root=$("national-saved-list");empty(root);
  const sorted=[...state.saved].sort((a,b)=>Date.parse(a.closing_at)-Date.parse(b.closing_at));
  for(const row of sorted){
@@ -177,10 +183,13 @@ function renderCards(){
   card.append(main,side);root.append(card);
  }
  $("national-result-count").textContent=fmt.format(state.total)+(state.total===1?" edital encontrado":" editais encontrados");
- $("national-page-indicator").textContent="Exibindo "+fmt.format(state.items.length?state.offset+1:0)+"–"+fmt.format(Math.min(state.total,state.offset+state.items.length))+" de "+fmt.format(state.total)+" registros. Confirme os prazos no PNCP.";
- $("national-prev").hidden=state.offset===0;
- $("national-next").hidden=state.items.length<PAGE_SIZE||state.offset+state.items.length>=state.total;
- $("national-download").disabled=!state.items.length;
+ updateProControls();
+ $("national-page-indicator").textContent=isPro()
+   ?"Exibindo "+fmt.format(state.items.length?state.offset+1:0)+"–"+fmt.format(Math.min(state.total,state.offset+state.items.length))+" de "+fmt.format(state.total)+" nesta amostra.":
+   "Prévia gratuita: até cinco de "+fmt.format(state.total)+" oportunidades. Consulte o PNCP para acesso à fonte oficial.";
+ $("national-prev").hidden=!isPro()||state.offset===0;
+ $("national-next").hidden=!isPro()||state.items.length<PAGE_SIZE||state.offset+state.items.length>=state.total;
+ $("national-download").disabled=!isPro()||!state.items.length;
  const uf=$("national-uf").value;
  const coverageUnknown=state.coverageState!=="loaded";
  const knownMissing=state.coverageState==="loaded"&&uf&&
@@ -196,16 +205,18 @@ function renderCards(){
   "Experimente ampliar os filtros. A base é amostral e a situação do edital pode mudar.";
 }
 function args(){
- const focus=$("national-focus").value;
- const days=$("national-deadline").value;
- const amount=$("national-min").value;
+ const premium=isPro();
+ const focus=premium?$("national-focus").value:"";
+ const days=premium?$("national-deadline").value:"";
+ const amount=premium?$("national-min").value:"";
  return {p_q:$("national-q").value.trim().slice(0,120)||null,p_uf:$("national-uf").value||null,
-  p_city:$("national-city").value.trim().slice(0,90)||null,
+  p_city:premium?($("national-city").value.trim().slice(0,90)||null):null,
   p_focus:focus===""?null:focus==="true",
   p_days:days?Number(days):null,p_min_value:amount?Math.max(0,Number(amount)):null,
-  p_sort:$("national-sort").value,p_limit:PAGE_SIZE,p_offset:state.offset};
+  p_sort:premium?$("national-sort").value:"deadline",p_limit:pageSize(),p_offset:premium?state.offset:0};
 }
 async function search(){
+ if(!isPro())state.offset=0;
  if(state.request)state.request.abort();
  const ctrl=new AbortController();state.request=ctrl;state.loading=true;
  $("national-submit").disabled=true;$("national-status").textContent="Consultando base nacional...";
@@ -240,6 +251,7 @@ function restoreSharedSearch(){
  }
  const uf=params.get("uf");
  if(uf&&Object.prototype.hasOwnProperty.call(STATES,uf))$("national-uf").value=uf;
+ if(!isPro())return;
  const focus=params.get("focus");
  if(["true","false"].includes(focus))$("national-focus").value=focus;
  const days=params.get("days");
@@ -252,8 +264,7 @@ function restoreSharedSearch(){
 function sharedSearchUrl(){
  const link=new URL(location.href);
  link.search="";link.hash="brasil";
- const pairs=[["q","national-q"],["uf","national-uf"],["city","national-city"],
-   ["focus","national-focus"],["days","national-deadline"],["min","national-min"],["sort","national-sort"]];
+ const pairs=isPro()?[["q","national-q"],["uf","national-uf"],["city","national-city"],["focus","national-focus"],["days","national-deadline"],["min","national-min"],["sort","national-sort"]]:[["q","national-q"],["uf","national-uf"]];
  for(const [param,element] of pairs){
   const value=$(element).value.trim();
   if(value&&(param!=="sort"||value!=="deadline"))link.searchParams.set(param,value);
@@ -276,7 +287,7 @@ let debounce=null;
 function filtersChanged(){state.offset=0;clearTimeout(debounce);debounce=setTimeout(()=>{renderCoverage();search()},300)}
 function csvCell(v){let s=String(v??"").replace(/[\r\n]/g," ").trim();if(/^[\s]*[=+\-@]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'}
 function downloadPage(){
- if(!state.items.length)return;
+ if(!isPro()||!state.items.length)return;
  const rows=[["Controle PNCP","Título","Órgão","Município","UF","Categoria sugerida","Modalidade","Prazo informado","Valor estimado BRL","Último registro","Edital oficial"]];
  for(const r of state.items){const url=official(r);if(!url)continue;
   rows.push([r.pncp_id,r.title,r.agency,r.municipality,r.uf,category(r.title),r.modality,r.closing_at,r.estimated_value_brl??"",r.last_observed_at,url]);}
@@ -302,12 +313,48 @@ async function loadCoverage(){
  }
  renderCoverage();
 }
+
+function updateProControls(){
+ const pro=isPro();
+ $("national-advanced").disabled=!pro;
+ $("national-sort").disabled=!pro;
+ $("national-pro-tools").hidden=!pro;
+ $("national-locked").hidden=pro;
+ $("national-free-upsell").hidden=pro;
+ if(!pro){
+  $("national-save-search-form").hidden=true;
+  $("national-save-search-toggle").setAttribute("aria-expanded","false");
+ }
+}
+async function savePremiumSearch(event){
+ event.preventDefault();
+ const status=$("national-save-search-status"),button=$("national-save-search-submit");
+ const account=window.EditalumeAccount;
+ if(!isPro()||!account?.createSavedSearch){status.textContent="É necessário ter uma conta Pro verificada para salvar pesquisas.";return;}
+ const name=$("national-save-search-name").value.trim();
+ if(name.length<2||name.length>60){status.textContent="Dê um nome entre 2 e 60 caracteres.";return;}
+ button.disabled=true;status.textContent="Salvando pesquisa...";
+ try{
+  const filter=args();
+  await account.createSavedSearch({
+   name,search_text:filter.p_q,uf:filter.p_uf,city:filter.p_city,
+   sector_focus:filter.p_focus,min_value:filter.p_min_value,
+   deadline_days:filter.p_days
+  });
+  $("national-save-search-name").value="";
+  $("national-save-search-form").hidden=true;
+  $("national-save-search-toggle").setAttribute("aria-expanded","false");
+  status.textContent="Pesquisa salva na sua conta Pro. E-mails automáticos ainda não estão ativos.";
+ }catch(error){status.textContent=error?.message||"Não foi possível salvar a pesquisa.";}
+ finally{button.disabled=false;}
+}
 function init(){
  if(!$("national-form"))return;
  window.addEventListener("editalume-account-changed",()=>{
    const account=window.EditalumeAccount;
    state.saved=account?.user?account.favorites.map(cleanBookmark).filter(Boolean):loadBookmarks();
-   renderBookmarks();renderCards();
+   if(isPro())restoreSharedSearch();
+   updateProControls();renderBookmarks();search();
  });
  state.saved=loadBookmarks();
  renderBookmarks();
@@ -328,7 +375,13 @@ function init(){
  $("national-next").addEventListener("click",()=>{state.offset+=PAGE_SIZE;search();$("national-result-count").scrollIntoView({behavior:"smooth",block:"center"})});
  $("national-prev").addEventListener("click",()=>{state.offset=Math.max(0,state.offset-PAGE_SIZE);search();$("national-result-count").scrollIntoView({behavior:"smooth",block:"center"})});
  $("national-download").addEventListener("click",downloadPage);
- renderCoverage();loadCoverage();search();
+ $("national-save-search-toggle").addEventListener("click",()=>{
+  const form=$("national-save-search-form"),opening=form.hidden;
+  form.hidden=!opening;$("national-save-search-toggle").setAttribute("aria-expanded",String(opening));
+  if(opening)$("national-save-search-name").focus();
+ });
+ $("national-save-search-form").addEventListener("submit",savePremiumSearch);
+ updateProControls();renderCoverage();loadCoverage();search();
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
