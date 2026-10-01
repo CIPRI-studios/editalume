@@ -6,8 +6,8 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <title>Minha conta · Editalume</title>
-<link rel="stylesheet" href="./account.css?v=1">
-<script type="module" src="./account.js?v=1"></script>
+<link rel="stylesheet" href="./account.css?v=2">
+<script type="module" src="./account.js?v=2"></script>
 </head><body>
 <a class="skip" href="#main">Pular para conteúdo</a>
 <header class="top"><a class="logo" href="./">editalume<span>.</span></a><a class="back" href="./#brasil">← Voltar à pesquisa</a></header>
@@ -16,17 +16,29 @@
 <p>Acesse seus favoritos em diferentes dispositivos. A busca pública permanece gratuita.</p></section>
 <p class="status" id="account-status" role="status" aria-live="polite">Conectando sua conta com segurança...</p>
 <section class="panel" id="account-login" aria-labelledby="login-heading">
- <h2 id="login-heading">Entrar ou criar conta</h2><p>Use seu e-mail profissional. Enviaremos um link de acesso, sem necessidade de senha.</p>
+ <h2 id="login-heading">Entrar ou criar conta</h2><p>Primeiro acesso? Receba um link por e-mail. Depois de entrar, você pode definir uma senha, se preferir.</p>
  <form id="account-login-form">
   <label for="account-login-email">E-mail</label>
   <input id="account-login-email" type="email" required autocomplete="email" maxlength="160" placeholder="voce@empresa.com.br">
   <button id="account-login-button" type="submit">Enviar link de acesso ↗</button>
  </form>
+ <details class="auth-password"><summary>Já tenho senha · entrar com senha</summary>
+ <form id="account-password-login-form">
+  <label for="account-password-login-email">E-mail</label><input id="account-password-login-email" type="email" required autocomplete="username" maxlength="160" placeholder="voce@empresa.com.br">
+  <label for="account-password-login-password">Senha</label><input id="account-password-login-password" type="password" required autocomplete="current-password" placeholder="Sua senha">
+  <button id="account-password-login-button" type="submit">Entrar com senha ↗</button>
+ </form><p class="form-hint">Esqueceu a senha? Entre pelo link enviado acima e defina uma nova.</p></details>
  <small>Ao criar uma conta, você terá acesso aos favoritos gratuitos. Não será feita nenhuma cobrança. Veja nossa <a href="./privacidade.html">Política de privacidade e termos do piloto</a>. Se não pediu o link, ignore o e-mail.</small>
 </section>
 <section class="panel" id="account-panel" hidden aria-labelledby="account-heading">
  <div class="account-top"><div><span class="eyebrow" id="account-plan">Explorar · Grátis</span><h2 id="account-heading">Minha conta</h2><p id="account-email"></p></div><button type="button" id="account-logout" class="quiet">Sair</button></div>
  <p id="account-plan-note"></p>
+ <details class="auth-password"><summary>Segurança · criar ou alterar senha</summary><p>Opcional: você pode continuar entrando pelo link. Use pelo menos 12 caracteres.</p>
+ <form id="account-password-form">
+  <label for="account-new-password">Nova senha</label><input id="account-new-password" type="password" required minlength="12" maxlength="72" autocomplete="new-password" placeholder="Pelo menos 12 caracteres">
+  <label for="account-confirm-password">Confirmar senha</label><input id="account-confirm-password" type="password" required minlength="12" maxlength="72" autocomplete="new-password" placeholder="Repita a senha">
+  <button id="account-password-button" type="submit">Salvar senha</button>
+ </form><p id="account-password-status" class="password-status" role="status" aria-live="polite"></p></details>
  <div class="favorite-heading"><h3>Favoritos sincronizados</h3><strong id="account-favorites-count">0 / 5 favoritos na nuvem</strong></div>
  <button type="button" id="account-import" class="quiet" hidden>Importar favoritos deste dispositivo</button>
  <div id="account-favorites" class="favorite-list"></div>
