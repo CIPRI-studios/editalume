@@ -11,6 +11,6 @@ a(js.includes("if(!state.user)"),"Only authenticated users set password");
 a(js.includes("first.value!==confirmation.value"),"Confirm password before saving");
 a(html.includes('autocomplete="current-password"'));
 a(html.includes('autocomplete="new-password"'));
-a(fs.readFileSync("site/sw.js","utf8").includes("account.js?v=2"),"Invalidate PWA cache");
-a(fs.readFileSync("site/index.html","utf8").includes("account-bridge.js?v=2"));
+a(fs.readFileSync("site/sw.js","utf8").includes("account.js?v=3"),"Invalidate PWA cache");
+a(fs.readFileSync("site/index.html","utf8").includes("account-bridge.js?v=3"));
 console.log("PASS optional password UI, Supabase API wiring, Magic Link retention and cache version");
