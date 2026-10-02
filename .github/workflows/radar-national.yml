@@ -50,7 +50,8 @@ jobs:
       id-token: write
       contents: read
     env:
-      REQUESTED_UFS: ${{ inputs.states }}
+      # Push is a bounded smoke test. Daily schedule/blank manual dispatch scans all 27.
+      REQUESTED_UFS: ${{ inputs.states || (github.event_name == 'push' && 'SP' || '') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
