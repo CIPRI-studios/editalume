@@ -20,9 +20,15 @@ jobs:
           node --check site/sw.js
           node --check site/plan-policy.js
           node --check tests/launch-copy.cjs
+          cp supabase/functions/editalume-pro-billing-webhook/index.ts /tmp/editalume-webhook.mjs
+          cp supabase/functions/editalume-pro-billing-intent/index.ts /tmp/editalume-intent.mjs
+          node --check /tmp/editalume-webhook.mjs
+          node --check /tmp/editalume-intent.mjs
       - name: Regressions offline
         run: |
           node tests/freemium-policy.cjs
           node tests/pro-export.cjs
           node tests/launch-copy.cjs
           node tests/password-flow.cjs
+          node tests/asaas-pro-core.mjs
+          node tests/asaas-pro-integration.cjs

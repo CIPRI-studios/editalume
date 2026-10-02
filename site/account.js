@@ -20,7 +20,7 @@
    "sb_publishable_O85v7HRJg7br9kxUbvticw_NNO8jp4w",
    {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:"implicit"}}
  );
- const state={user:null,favorites:[],savedSearches:[],pro:false,error:null};
+ const state={user:null,favorites:[],savedSearches:[],pro:false,billingReady:false,error:null};
  const emit=()=>window.dispatchEvent(new CustomEvent("editalume-account-changed"));
  const official=id=>{
    const match=/^(\d{14})-\d+-(\d+)\/(\d{4})$/.exec(id||"");
@@ -78,7 +78,7 @@
      const {data:{session},error:sessionError}=await client.auth.getSession();
      if(sessionError)throw sessionError;
      if(!session){
-       state.user=null;state.favorites=[];state.savedSearches=[];state.pro=false;state.error=null;
+       state.user=null;state.favorites=[];state.savedSearches=[];state.pro=false;state.billingReady=false;state.error=null;
        render();emit();return;
      }
      const {data:{user},error:userError}=await client.auth.getUser();
@@ -90,9 +90,18 @@
      state.pro=!!(ent?.plan==="premium"&&ent?.last_verified_at&&
        ent?.active_until&&Date.parse(ent.active_until)>Date.now());
      await loadFavorites();await loadSavedSearches();
+     state.billingReady=false;
+     if(!state.pro){
+      try{
+       const result=await fetch("https://jhxhbgprjqppzfrjdfvj.supabase.co/functions/v1/editalume-pro-billing-intent",{
+        headers:{Authorization:"Bearer "+session.access_token,apikey:"sb_publishable_O85v7HRJg7br9kxUbvticw_NNO8jp4w"}
+       });
+       if(result.ok){const data=await result.json();state.billingReady=data.ready===true&&data.environment==="production";}
+      }catch(_e){state.billingReady=false;}
+     }
      state.error=null;render();emit();
    }catch(_err){
-     state.pro=false;state.savedSearches=[];
+     state.pro=false;state.savedSearches=[];state.billingReady=false;
      state.error="Não foi possível validar a conta neste momento. Recursos Pro temporariamente bloqueados.";
      render();announce(state.error,true);emit();
    }
@@ -205,6 +214,13 @@
      $("account-plan-note").textContent=state.pro
        ?"Acesso Pro verificado. Alertas por e-mail serão liberados somente quando o serviço estiver operacional."
        :"Sua conta gratuita permite até cinco favoritos sincronizados. A assinatura Pro está em preparação.";
+     const button=$("pro-subscribe"),notice=$("pro-subscribe-status");
+     if(button)button.hidden=state.pro||!state.billingReady;
+     if(notice)notice.textContent=state.pro
+       ?"Esta conta já possui acesso Pro."
+       :state.billingReady
+        ?"A assinatura está disponível. Antes de pagar, confirme que o e-mail usado no Asaas é o mesmo desta conta."
+        :"A recorrência está em homologação. Nenhuma cobrança ocorre ao criar uma conta.";
      renderFavorites();renderSavedSearches();
      const importButton=$("account-import");
      if(importButton){
@@ -214,6 +230,26 @@
      }
    }
    if(!state.error)announce(logged?"Sua conta está conectada.":"Entre com um link enviado para seu e-mail.");
+ }
+ if($("pro-subscribe")){
+   $("pro-subscribe").addEventListener("click",async()=>{
+    if(!state.user||state.pro||!state.billingReady){announce("A assinatura ainda não está disponível nesta conta.",true);return;}
+    const button=$("pro-subscribe");button.disabled=true;
+    announce("Registrando seu e-mail verificado antes de abrir o Asaas...");
+    try{
+     const {data:{session},error:authError}=await client.auth.getSession();
+     if(authError||!session||session.user.id!==state.user.id)throw Error("Sessão expirada. Entre novamente.");
+     const response=await fetch("https://jhxhbgprjqppzfrjdfvj.supabase.co/functions/v1/editalume-pro-billing-intent",{
+      method:"POST",headers:{Authorization:"Bearer "+session.access_token,
+       apikey:"sb_publishable_O85v7HRJg7br9kxUbvticw_NNO8jp4w","Content-Type":"application/json"},
+      body:"{}"
+     });
+     const body=await response.json();
+     const allowed="https://www.asaas.com/000/c/nruxbdhrq24sn9db";
+     if(!response.ok||body.checkoutUrl!==allowed||body.ready!==true)throw Error("A integração ainda não está pronta para novas cobranças.");
+     window.location.assign(allowed);
+    }catch(error){announce(error.message||"Não foi possível iniciar. Nenhuma cobrança foi criada.",true);button.disabled=false;}
+   });
  }
  if($("account-login-form")){
    $("account-login-form").addEventListener("submit",async event=>{

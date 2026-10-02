@@ -59,6 +59,8 @@ jobs:
           node tests/pro-export.cjs
           node tests/launch-copy.cjs
           node tests/password-flow.cjs
+          node tests/asaas-pro-core.mjs
+          node tests/asaas-pro-integration.cjs
           python3 - <<'PY'
           import json,pathlib
           p=pathlib.Path("site")
