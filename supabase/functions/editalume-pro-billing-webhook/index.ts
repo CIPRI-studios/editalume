@@ -94,7 +94,7 @@ async function markEvent(raw,code){
 Deno.serve(async req=>{
  if(req.method!=="POST")return json({ok:false,error:"method_not_allowed"},405);
  if(!URL_BASE||!secret||!token||!key||!linkId||!linkUrl||
-    (ENVIRONMENT==="production"&&S("ASAAS_LIVE_LAUNCH_ENABLED")!=="true"))
+    (ENVIRONMENT==="production"&&(S("ASAAS_LIVE_LAUNCH_ENABLED")!=="true"||S("ASAAS_LIVE_QA_APPROVED")!=="true")))
     return json({ok:false,error:"billing_not_configured"},503);
  if(!await sameSecret(req.headers.get("asaas-access-token"),token))
     return json({ok:false,error:"unauthorized"},401);
