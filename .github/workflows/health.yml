@@ -1,0 +1,50 @@
+name: Editalume · snapshot freshness health
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 15 * * *' # 12:00 São Paulo; after daily catalog run
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify independent snapshot freshness and report severe failures
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,sys
+          from pathlib import Path
+          from datetime import datetime,timezone
+          root=Path("site")
+          required=("opportunities.json","search-index.json","refresh-status.json")
+          def fail(msg):
+              print("::error::"+msg)
+              sys.exit(1)
+          docs={}
+          for name in required:
+              p=root/name
+              if not p.is_file() or p.stat().st_size==0:
+                  fail("Independent Editalume missing "+name)
+              try: docs[name]=json.loads(p.read_text(encoding="utf-8"))
+              except Exception: fail("Invalid JSON in "+name)
+          def age_hours(stamp):
+              try:
+                  t=datetime.fromisoformat(str(stamp).replace("Z","+00:00"))
+                  if t.tzinfo is None: raise ValueError("Timezone missing")
+                  return (datetime.now(timezone.utc)-t.astimezone(timezone.utc)).total_seconds()/3600
+              except Exception: fail("Invalid source timestamp")
+          state=docs["refresh-status.json"]
+          age=age_hours(state.get("attempted_at"))
+          if age < -1 or age > 34: fail("Scheduled independent catalog not attempted within 34h")
+          for key in ("opportunities.json","search-index.json"):
+              if age_hours(docs[key].get("generated_at")) > 50:
+                  fail(key+" has no recently verified PNCP generation within 50h")
+          if state.get("sample_refresh")=="failed" and state.get("index_refresh")=="failed":
+              fail("Both PNCP refresh feeds failed today")
+          if state.get("degraded"):
+              print("::warning::Editalume source collection is partial/degraded; consult official PNCP.")
+          print("Independent Editalume refresh health OK")
+          PY
