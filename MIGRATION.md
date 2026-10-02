@@ -1,18 +1,48 @@
-# Editalume — independent hosting
+# Editalume — independent operations
 
-This repository contains **only the Editalume static web app**, extracted from `caueccipriano/mylife-caue-app/public/radar/`. It does **not** move or modify the original multi-app repository.
+## Live architecture
+- Primary independent repository: `CIPRI-studios/editalume`.
+- National PNCP discovery: `.github/workflows/radar-national.yml` in **this** repository.
+  It runs daily at 08:00 UTC / 05:00 São Paulo (GitHub may delay scheduled starts),
+  runs safety/unit tests first, scans a bounded non-exhaustive sample of 27 UFs,
+  and submits signed GitHub OIDC reports to Supabase `editalume-ingest`.
+- Supabase database: the existing Editalume project. Public national search is
+  read-only from Supabase and the API's table/RPC policies govern frontend access.
+- Supplementary static SP sample: `radar/build_snapshots.py` reads only the
+  **public, read-only** Editalume Supabase API and builds `search-index.json`,
+  `opportunities.json` and `refresh-status.json` during the independent
+  `.github/workflows/pages.yml` publication. Every four hours, independent
+  snapshot generation and site publication are scheduled. The JSON timestamps
+  refer to the original verified sample, not to the file generation event.
+- Neither pipeline needs to download data or code from the old monorepo.
 
-GitHub Pages (Actions source) publishes the `site/` directory at the repo's project URL, regardless of whether this repository is under a personal account or moved to the CIPRI Studios organization. Every four hours, the publishing workflow refreshes the three public fallback snapshots from the existing collector. National dynamic queries continue to use the existing Supabase Editalume database.
+## Validation / operational watch
+- Watch both workflows in the Actions tab after updates.
+- Check Supabase `editalume_uf_coverage` for all 27 UFs and recent
+  `last_success_at` times. `complete_sample` is **not** national exhaustiveness:
+  sampling is deliberately bounded and PNCP may limit requests.
+- A failed live snapshot fetch blocks **new publication** rather than inventing
+  fresh data; the previously published version remains available.
+- Use `workflow_dispatch` with 1–3 states for a bounded collection smoke test.
+- Public static SP snapshots are merely a supplementary sample; the national
+  results come from the live Supabase database. Confirm every tender and deadline
+  with official PNCP records.
 
-## Setup checklist (manual)
-1. **Concluído:** repositório transferido para `CIPRI-studios/editalume`, preservando o antigo aplicativo multifuncional.
-2. In the destination repo Settings → Pages choose **GitHub Actions**. Ensure Actions is enabled, then run the *Editalume · independent GitHub Pages* workflow. The resulting URL is `https://cipri-studios.github.io/editalume/` only after the org transfer.
-3. Supabase Auth → URL Configuration: allow `https://cipri-studios.github.io/editalume/conta.html` as an **additional redirect URL** (keep the old one until real login and favorites are verified). Do not blindly change the project's global Site URL if other software uses it.
-4. **Concluído parcialmente:** a função `editalume-feedback` já aceita `https://cipri-studios.github.io` e mantém a origem antiga; falta validar o envio real do formulário no novo domínio.
-5. Test registration email, redirect, two distinct accounts/favorites isolation and sign-out. Do not activate paid access until the real Asaas production recurring payment, verified webhook, delivery, cancellation and refund flow work.
-6. Keep the original Pages link available as an interim fallback until all of the above pass.
+## Commercial hosting and go-live
+- GitHub Pages currently serves the independent technical preview. It is not
+  the planned permanent host for a commercial SaaS. Move the `site/` output
+  to a hosting provider whose free tier allows this commercial use, e.g.
+  Cloudflare Pages, **before ongoing commercial operation**; provider login
+  and GitHub authorization may be required. Do not present preview hosting as
+  a permanent compliant commercial host.
+- Keep the existing Supabase project and its auth redirect allowlist. Add the
+  new host's `/conta.html` redirect before switching traffic; never remove
+  an active login URL without testing it.
+- Verify real sign-in, two-account favorites isolation, plan entitlement,
+  recurring Asaas webhook, refunds/cancellation and real email delivery
+  separately. This infrastructure migration does **not** assert those
+  commercial features are verified.
 
-## Caveats
-- The fallback snapshot source still belongs to the former mono-repository, whose collector continues running. Eventually migrate the collector and CI to this dedicated repo before retiring the old Pages address.
-- Research data is a rotating non-exhaustive sample. Validate availability and exact terms with the official PNCP.
-- A paid plan is **planned** at R$ 49.90/month. Subscriptions and automatic email delivery are **not active**.
+## Remaining optional improvement
+Add an automatic failure notification for national sync and snapshot publication,
+and a 27-UF freshness check separate from a green workflow conclusion.
