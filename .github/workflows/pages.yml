@@ -6,7 +6,11 @@ on:
       - 'site/**'
       - 'tests/**'
       - '.github/workflows/pages.yml'
+      - 'radar/build_snapshots.py'
+      - 'radar/test_build_snapshots.py'
   workflow_dispatch:
+  schedule:
+    - cron: '30 */4 * * *' # independent 4-hour public snapshot refresh
 permissions:
   contents: read
   pages: write
@@ -24,20 +28,19 @@ jobs:
     steps:
       - name: Checkout standalone site
         uses: actions/checkout@v4
-      - name: Download public fallback snapshots from existing collector
-        shell: bash
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify independently built snapshot format
+        run: |
+          python -m unittest radar.test_build_snapshots -v
+          python radar/build_snapshots.py --offline-check
+      - name: Build static fallback from Editalume's own public Supabase data
         run: |
           set -euo pipefail
+          python radar/build_snapshots.py --out site
           for name in opportunities.json search-index.json refresh-status.json; do
-            if test -s "site/$name"; then
-              python3 -m json.tool "site/$name" >/dev/null
-              continue
-            fi
-            # Temporary bootstrap only: immediately prefer independently produced snapshots.
-            url="https://raw.githubusercontent.com/caueccipriano/mylife-caue-app/main/public/radar/$name"
-            curl --fail --location --retry 3 --max-time 35 "$url" -o "site/$name.tmp"
-            python3 -m json.tool "site/$name.tmp" >/dev/null
-            mv "site/$name.tmp" "site/$name"
+            python -m json.tool "site/$name" >/dev/null
           done
       - name: Verify required independent files
         shell: bash
