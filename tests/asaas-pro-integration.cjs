@@ -15,6 +15,7 @@ assert(intent.includes("user.email_confirmed_at")&&intent.includes("auth/v1/user
 assert(intent.includes('ASAAS_LIVE_LAUNCH_ENABLED')&&intent.includes('payment_integration_not_enabled'),"Backend defaults disabled");
 assert(webhook.includes("sameSecret")&&webhook.includes("asaas-access-token"),"Independent webhook secret required");
 assert(webhook.includes("auditLink()")&&webhook.includes("periodFromVerifiedPayments"),"Verify exact link and paid invoice via API");
+assert(webhook.includes("hasOriginalLinkPayment(payments,linkId,subId,subscription.customer)"),"Hosted-link origin verified from trusted Asaas payment as fallback");
 assert(webhook.includes('ENVIRONMENT!=="production"')&&webhook.includes("recomputeEntitlement"),"Sandbox cannot assign production Pro");
 assert(webhook.includes("source_verified:true")&&webhook.includes('payment_link_id:linkId'),"Verified metadata saved internally");
 assert(core.includes("pay.subscription!==subscriptionId")&&core.includes("pay.customer!==customerId"),"Payment cannot be claimed by another account");
