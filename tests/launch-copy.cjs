@@ -4,6 +4,7 @@ const fs=require("node:fs"),assert=require("node:assert/strict");
 const home=fs.readFileSync("site/index.html","utf8");
 const account=fs.readFileSync("site/conta.html","utf8");
 const privacy=fs.readFileSync("site/privacidade.html","utf8");
+const asaas=fs.readFileSync("docs/ASAAS_LINKS_OPERACAO.md","utf8");
 for(const phrase of ["Prévia de cinco resultados","CSV de até 200 resultados","Painel estratégico com cinco indicadores","Até três pesquisas personalizadas salvas","em desenvolvimento"]){
  assert(home.includes(phrase),"Missing Free/Pro disclosure: "+phrase);
 }
@@ -15,10 +16,11 @@ assert(home.includes("id=\"sob-medida\""),"Individual Sob Medida remains availab
 assert(home.includes("link individual do Asaas"),"One-off checkout is sent after feasibility confirmation");
 assert(!home.includes("https://www.asaas.com/000/c/"),"No unattended payment before merchant identity and scope are checked");
 assert(home.includes("não libera o Pro"),"Manual monthly checkout must not be marketed as Pro");
+assert(asaas.includes("nruxbdhrq24sn9db")&&asaas.includes("7ea8eja903t5z4wr"),"Both verified Asaas links are documented");
 
 assert(home.includes("pncp.gov.br/app/editais"),"Public official PNCP source always linked");
 assert(account.includes("CSV de até 200 resultados"),"Pro account teaser is not obsolete");
 assert(account.includes("Alertas automáticos e contratação comercial ainda não estão disponíveis"),"Do not market inactive delivery");
 assert(privacy.includes("Se você salvar editais ou pesquisas estratégicas na conta"),"Private saved-search handling disclosed");
-assert(privacy.includes("As assinaturas e envios automáticos do Editalume Pro ainda não estão disponíveis"),"Privacy copy matches actual service");
+assert(privacy.includes("A assinatura e os envios automáticos do Editalume Pro ainda não estão disponíveis"),"Privacy copy matches actual service");
 console.log("PASS: Free/Pro commercial copy, pilot status, privacy and unlaunched alert/billing disclaimers");
