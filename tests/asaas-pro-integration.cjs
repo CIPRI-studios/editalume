@@ -1,0 +1,21 @@
+/* Fast static barriers: real-money checkout stays gated until verified. */
+"use strict";
+const fs=require("node:fs"),assert=require("node:assert/strict");
+const home=fs.readFileSync("site/index.html","utf8");
+const account=fs.readFileSync("site/account.js","utf8");
+const accountHtml=fs.readFileSync("site/conta.html","utf8");
+const intent=fs.readFileSync("supabase/functions/editalume-pro-billing-intent/index.ts","utf8");
+const webhook=fs.readFileSync("supabase/functions/editalume-pro-billing-webhook/index.ts","utf8");
+const core=fs.readFileSync("supabase/functions/editalume-pro-billing-webhook/core.mjs","utf8");
+assert(!home.includes('href="https://www.asaas.com/000/c/nruxbdhrq24sn9db"'),"No anonymous monthly checkout on homepage");
+assert(accountHtml.includes('id="pro-subscribe"')&&accountHtml.includes("hidden"),"Authenticated checkout starts hidden");
+assert(account.includes("state.billingReady")&&account.includes("response.ok")&&account.includes("payload")===false,"Server gate controls browser checkout");
+assert(account.includes("window.location.assign(allowed)")&&account.includes("body.checkoutUrl!==allowed"),"Explicit allowed Asaas destination");
+assert(intent.includes("user.email_confirmed_at")&&intent.includes("auth/v1/user"),"Customer intent requires verified Auth session");
+assert(intent.includes('ASAAS_LIVE_LAUNCH_ENABLED')&&intent.includes('payment_integration_not_enabled'),"Backend defaults disabled");
+assert(webhook.includes("sameSecret")&&webhook.includes("asaas-access-token"),"Independent webhook secret required");
+assert(webhook.includes("auditLink()")&&webhook.includes("periodFromVerifiedPayments"),"Verify exact link and paid invoice via API");
+assert(webhook.includes('ENVIRONMENT!=="production"')&&webhook.includes("recomputeEntitlement"),"Sandbox cannot assign production Pro");
+assert(webhook.includes("source_verified:true")&&webhook.includes('payment_link_id:linkId'),"Verified metadata saved internally");
+assert(core.includes("pay.subscription!==subscriptionId")&&core.includes("pay.customer!==customerId"),"Payment cannot be claimed by another account");
+console.log("PASS checkout launch gate, verified identity, payment-link matching and sandbox isolation");
