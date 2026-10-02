@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {PRO_VALUE,PRO_LINK_URL,emailKey,validProSubscription,addCalendarMonth,periodFromVerifiedPayments} from "../supabase/functions/_shared/asaas-pro-core.mjs";
+import {PRO_VALUE,PRO_LINK_URL,emailKey,validProSubscription,addCalendarMonth,periodFromVerifiedPayments} from "../supabase/functions/editalume-pro-billing-webhook/core.mjs";
 assert.equal(PRO_VALUE,49.90);
 assert.equal(PRO_LINK_URL,"https://www.asaas.com/000/c/nruxbdhrq24sn9db");
 assert.equal(emailKey(" Cliente@Empresa.Com  "),"cliente@empresa.com");
