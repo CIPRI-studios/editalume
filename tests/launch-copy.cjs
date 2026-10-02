@@ -13,8 +13,11 @@ assert(home.includes("O link de assinatura mensal do Pro já foi criado no Asaas
 assert(home.includes("ainda não está conectado à ativação da conta"),"Cannot collect before account fulfillment");
 assert(!home.includes('id="sob-medida-mensal"'),"No invented monthly manual product");
 assert(home.includes('id="sob-medida"'),"Keep single manual report");
-assert(home.includes("link individual do Asaas"),"Send individual checkout after qualification");
-assert(!home.includes("https://www.asaas.com/000/c/"),"No automatic charge link before gates");
+assert(home.includes('id="oneoff-checkout"'),"Individual product must have a direct checkout CTA");
+assert(home.includes('href="https://www.asaas.com/000/c/7ea8eja903t5z4wr"'),"Direct CTA targets exact verified one-off Asaas checkout");
+assert(home.includes('id="oneoff-briefing"'),"Manual fulfillment needs a customer briefing step");
+assert(!home.includes('href="https://www.asaas.com/000/c/nruxbdhrq24sn9db"'),"Do not expose monthly Pro checkout until entitlement automation is verified");
+assert(privacy.includes("pago diretamente em link externo do Asaas"),"Privacy/fulfillment copy matches one-off checkout");
 assert(asaas.includes("nruxbdhrq24sn9db")&&asaas.includes("7ea8eja903t5z4wr"),"Both Asaas links documented");
 assert(asaas.includes("problemas de formatação"),"Track remaining Asaas checkout formatting issue");
 
