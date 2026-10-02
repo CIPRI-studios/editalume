@@ -3,7 +3,7 @@
  * payment link, subscription, monthly price and verified Supabase account.
  * SANDBOX NEVER CHANGES public.editalume_entitlements.
  */
-import {emailKey,validProSubscription,periodFromVerifiedPayments,PRO_VALUE} from "../_shared/asaas-pro-core.mjs";
+import {emailKey,validProSubscription,periodFromVerifiedPayments,PRO_VALUE} from "./core.mjs";
 const ENVIRONMENT="production"; // Substitute only for sandbox deployment.
 const S=Deno.env.get.bind(Deno.env);
 const prefix=ENVIRONMENT==="production"?"ASAAS_LIVE":"ASAAS_SANDBOX";
