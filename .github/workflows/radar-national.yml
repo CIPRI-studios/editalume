@@ -1,0 +1,25 @@
+name: Editalume · national migration preflight
+# National production schedule stays on the original repo until this repo is
+# explicitly trusted by the OIDC-only Supabase ingest function and tested.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'radar/**'
+      - '.github/workflows/radar-national.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate migrated national collector without live uploads
+        run: |
+          PYTHONPATH=radar python -m unittest discover -s radar -p 'test_*.py' -v
+          python radar/national_collector.py --offline-check

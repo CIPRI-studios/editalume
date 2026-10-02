@@ -1,0 +1,91 @@
+name: Editalume · independent public PNCP catalog
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'radar/collector.py'
+      - 'radar/search_index.py'
+      - 'radar/test_collector.py'
+      - 'radar/test_search_index.py'
+      - '.github/workflows/catalog.yml'
+  schedule:
+    - cron: '17 10 * * *' # 07:17 Brasil; scheduled starts can be delayed
+permissions:
+  contents: write
+concurrency:
+  group: editalume-independent-catalog
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify independent catalog and national parser without internet
+        run: |
+          PYTHONPATH=radar python -m unittest discover -s radar -p 'test_*.py' -v
+          python -m py_compile radar/collector.py radar/search_index.py radar/national_collector.py
+          python radar/national_collector.py --offline-check
+      - name: Fetch official PNCP public sample; preserve existing snapshot on failure
+        shell: bash
+        run: |
+          set -euo pipefail
+          if python radar/collector.py --output site/opportunities.json; then
+            echo "SAMPLE_RESULT=success" >> "$GITHUB_ENV"
+          else
+            echo "SAMPLE_RESULT=failed" >> "$GITHUB_ENV"
+            test -s site/opportunities.json || exit 1
+            echo "::warning::PNCP sample unavailable; retained the previous verified snapshot."
+          fi
+      - name: Extend independent public search index
+        shell: bash
+        run: |
+          set -euo pipefail
+          if python radar/search_index.py --output site/search-index.json; then
+            if python -c 'import json; d=json.load(open("site/search-index.json")); exit(0 if not d.get("partial") else 1)'; then
+              echo "INDEX_RESULT=success" >> "$GITHUB_ENV"
+            else
+              echo "INDEX_RESULT=partial" >> "$GITHUB_ENV"
+              echo "::warning::Search sample is partial; UI must disclose coverage."
+            fi
+          else
+            echo "INDEX_RESULT=failed" >> "$GITHUB_ENV"
+            test -s site/search-index.json || exit 1
+            echo "::warning::Index refresh failed; retained the last valid indexed sample."
+          fi
+      - name: Record transparent freshness and degradation state
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          from datetime import datetime,timezone
+          a=os.environ.get("SAMPLE_RESULT","unknown"); b=os.environ.get("INDEX_RESULT","unknown")
+          Path("site/refresh-status.json").write_text(json.dumps({
+            "attempted_at":datetime.now(timezone.utc).isoformat(),"sample_refresh":a,
+            "index_refresh":b,"degraded":a!="success" or b!="success",
+            "notice":"Amostra parcial. Consulte os documentos originais no PNCP para validar situação e prazos."
+          },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+          PY
+          python3 -m json.tool site/opportunities.json >/dev/null
+          python3 -m json.tool site/search-index.json >/dev/null
+      - name: Commit independent snapshots (never overwrite newer changes)
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE_SHA="$(git rev-parse HEAD)"
+          git add site/opportunities.json site/search-index.json site/refresh-status.json
+          git fetch origin main
+          if [ "$(git rev-parse origin/main)" != "$BASE_SHA" ]; then
+            echo "::warning::Main advanced while collecting; do not publish stale snapshots."
+            exit 0
+          fi
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'data: refresh independent Editalume PNCP catalog'
+          git push origin HEAD:main

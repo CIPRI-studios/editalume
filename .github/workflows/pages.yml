@@ -2,9 +2,11 @@ name: Editalume · independent GitHub Pages
 on:
   push:
     branches: [main]
+    paths:
+      - 'site/**'
+      - 'tests/**'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
-  schedule:
-    - cron: '17 */4 * * *'
 permissions:
   contents: read
   pages: write
@@ -27,6 +29,11 @@ jobs:
         run: |
           set -euo pipefail
           for name in opportunities.json search-index.json refresh-status.json; do
+            if test -s "site/$name"; then
+              python3 -m json.tool "site/$name" >/dev/null
+              continue
+            fi
+            # Temporary bootstrap only: immediately prefer independently produced snapshots.
             url="https://raw.githubusercontent.com/caueccipriano/mylife-caue-app/main/public/radar/$name"
             curl --fail --location --retry 3 --max-time 35 "$url" -o "site/$name.tmp"
             python3 -m json.tool "site/$name.tmp" >/dev/null
