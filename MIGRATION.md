@@ -43,6 +43,5 @@
   separately. This infrastructure migration does **not** assert those
   commercial features are verified.
 
-## Remaining optional improvement
-Add an automatic failure notification for national sync and snapshot publication,
-and a 27-UF freshness check separate from a green workflow conclusion.
+## Operations monitoring
+The independent radar-health.yml workflow checks 27 UFs at 08:00 Sao Paulo each day; it raises one GitHub issue when freshness fails and closes it on recovery. Failed site deployments are visible in GitHub Actions.
