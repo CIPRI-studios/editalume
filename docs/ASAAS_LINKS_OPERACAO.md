@@ -1,43 +1,45 @@
 # Editalume — links Asaas e liberação comercial
-_Conferência pública dos checkouts: 02/10/2026. Este documento não habilita cobranças na plataforma e não contém credenciais._
+_Conferência pública dos checkouts: 02/10/2026. Os links abaixo já existem no Asaas. **Nenhum deles é integrado ao login do Editalume neste momento.** Este documento não cria cobranças nem contém credenciais._
 
-## 1. Dois links criados pelo proprietário
+## 1. Links públicos verificados
 
-| Serviço | Tipo exibido pelo Asaas | Preço | Link |
+| Produto | Tipo exibido no Asaas | Preço | Link |
 |---|---|---|---|
-| **Sob Medida Mensal** | Frequência **Mensal**; checkout chama **Editalume Sob Medida** | R$ 49,90/mês | https://www.asaas.com/000/c/nruxbdhrq24sn9db |
-| **Sob Medida Individual** | **Somente à vista**; checkout chama **Editalume Sob Medida Individual** | R$ 49,90 uma vez | https://www.asaas.com/000/c/7ea8eja903t5z4wr |
+| **Editalume Pro** | **Editalume Pro**; frequência **mensal** | R$ 49,90/mês | https://www.asaas.com/000/c/nruxbdhrq24sn9db |
+| **Editalume Sob Medida Individual** | **Editalume Sob Medida Individual**; pagamento único à vista | R$ 49,90 | https://www.asaas.com/000/c/7ea8eja903t5z4wr |
 
-Ambos disponibilizam boleto/Pix, cartão e Pix na página pública consultada. Antes de enviar o link a clientes reais, conferir os métodos ativos e o valor novamente no painel Asaas.
+Em ambos os checkouts públicos foram observadas opções de boleto/Pix, cartão de crédito e Pix; confirmar a disponibilidade efetiva no painel antes da venda.
 
-**Separação contratual absoluta:** a recorrência disponível é do **Sob Medida Mensal, um serviço manual**, e NÃO é o checkout do **Editalume Pro** (ferramentas da plataforma ainda não liberadas comercialmente). Não executar upgrade em `editalume_entitlements` a partir desses links. Não divulgar alertas automáticos como funcionalidade já contratável.
+**Problema crítico de descrição:** embora o título do checkout mensal tenha sido corrigido para **Editalume Pro**, sua **descrição ainda diz "Relatório personalizado de oportunidades em licitações públicas"**. Essa entrega caracteriza o serviço humano Sob Medida, e não as ferramentas Pro. O proprietário deve editar a descrição do link mensal antes de divulgar. Sugestão segura enquanto não houver alertas:
 
-## 2. Problemas detectados na página de checkout
+> Acesso mensal às funcionalidades Editalume Pro: filtros avançados, busca e navegação ampliadas, exportação CSV de até 200 resultados, indicadores da amostra, três pesquisas salvas e até 200 favoritos, condicionado à confirmação do pagamento e à ativação da conta cadastrada. Base pública amostral e não exaustiva. Alertas automáticos por e-mail não incluídos nesta fase.
 
-- O vendedor visível aparece como pessoa física, com dados pessoais do proprietário; definir a identificação comercial pretendida no painel Asaas conforme as opções de conta e obrigações aplicáveis. Não copiar identificadores pessoais para páginas ou mensagens.
-- O site do vendedor exibido no checkout direciona para o radar pessoal de outro projeto, não para https://cipri-studios.github.io/editalume/. Corrigir no cadastro/painel Asaas, verificando ambos os links em janela sem login.
-- Validar contatos de suporte e verificar o texto público sobre prestação, entregas, cobrança e cancelamento **antes de enviar cobrança real**.
+**Não divulgar esse checkout ainda:** webhook autenticado, reconciliação do pagamento e vínculo Asaas–Supabase não estão em produção. A página do site permanece em lista de interesse até concluir testes reais e autorização de lançamento. **Criar assinatura no Asaas NÃO confere automaticamente acesso Pro.**
 
-## 3. Fluxo permitido após correção de identidade e termos
+## 2. Corrigir identificação pública do vendedor
 
-1. **Qualificar** por e-mail: razão/nome da empresa, atividade, categorias, municípios/UF, prazo de interesse e modalidade (individual ou mensal). Não solicitar dados de cartão, senhas ou credenciais.
-2. **Confirmar viabilidade e escopo** da amostra antes de cobrar. Para o plano individual, a proposta-piloto existente é até três oportunidades compatíveis *caso existam*. Para o mensal, definir por escrito **quantidade e periodicidade das entregas, janela de busca, suporte e política de cancelamento** antes de enviar o link; nada disso é automaticamente garantido por uma página de pagamento.
-3. Enviar **somente o link correto** após aceite:
-   - individual: `https://www.asaas.com/000/c/7ea8eja903t5z4wr`;
-   - mensal manual: `https://www.asaas.com/000/c/nruxbdhrq24sn9db`.
-   Nunca encaminhar a assinatura mensal Sob Medida como se fosse Pro.
-4. **Confirmar pagamento** no painel Asaas usando o identificador real da cobrança; criação de assinatura/visualização de boleto/retorno do navegador não prova quitação. Só então liberar/entregar o serviço manual. Registrar apenas o necessário no CRM, sem dados sensíveis de cartão e sem armazenar tokens.
-5. Registrar prazo e data de entrega e encaminhar o relatório com link para os editais oficiais. Se não houver oportunidades compatíveis, aplicar as condições formalizadas antes da cobrança.
-6. **Recorrência**: conferir novas mensalidades pagas no Asaas antes de executar novo período; em atrasos, cancelamentos e estornos, seguir a política comunicada ao cliente. Definir uma rotina operacional de conferência enquanto não houver integração de webhook + reconciliação.
-7. Convites de **piloto gratuito já prometidos** devem ser respeitados.
+- O checkout ainda apresenta dados do proprietário pessoa física. Verificar no painel a identificação comercial legalmente aplicável, evitando publicar dados pessoais em materiais promocionais.
+- O endereço de website no checkout ainda remete ao radar pessoal de outro projeto; solicitar alteração para https://cipri-studios.github.io/editalume/ e reconferir ambos os links em sessão sem login.
+- Conferir e-mail comercial de suporte e publicar condições do Pro: recursos disponíveis, ausência de alertas automáticos na fase atual, data de ativação, cobrança mensal, cancelamento e suporte.
+- Não solicitar dados de cartão ou CPF por e-mail, chat ou planilha; Asaas trata os dados de pagamento.
 
-## 4. Critérios de abertura para venda direta no site
+## 3. Operação do Sob Medida Individual
 
-- [ ] As duas telas do Asaas apresentam identidade comercial e URL corretas.
-- [ ] Individual: termos, amostra/escopo e prazo de entrega escritos e testados.
-- [ ] Mensal: calendário, quantidade de entregas, cancelamento e suporte publicados.
-- [ ] Compra-testes/verificação de fluxo realizados de modo autorizado, sem cobrança involuntária.
-- [ ] Suporte comercial pode verificar pagamento e organizar as entregas.
-- [ ] Para **Pro futuro**, teste de duas contas reais + segurança do vínculo Asaas–Supabase; apenas webhook autenticado e pagamento verificado ativam `editalume_entitlements`.
+1. Receber por e-mail empresa, categoria, municípios/UF e necessidade.
+2. Analisar viabilidade na base: oferecer até três oportunidades pertinentes **quando disponíveis**, escopo, prazo e condições antes de cobrar.
+3. Após aceite, enviar **somente** o link avulso https://www.asaas.com/000/c/7ea8eja903t5z4wr .
+4. Confirmar quitação real no painel Asaas antes de entregar e anotar status mínimo no CRM. Não ativar Pro por esse pagamento.
+5. Respeitar pilotos gratuitos já prometidos.
 
-Até esses itens estarem conferidos, o **site pode descrever as duas opções e receber pedidos por e-mail**, mas **não deve publicar os checkouts para autoatendimento**.
+## 4. Checklist para liberar assinatura Pro no site
+
+- [ ] Descrição do link mensal corrigida, com funcionalidades reais e exclusão expressa de alertas automáticos nesta fase.
+- [ ] Identidade e URL do vendedor verificadas nos dois checkouts.
+- [ ] Termos de assinatura/cancelamento e contato de suporte publicados.
+- [ ] Duas contas reais QA (Free e Pro de teste autorizado): autenticação, limites, favoritos, CSV e expiração.
+- [ ] Identificação segura do usuário Supabase em fluxo de contratação (login antes do checkout, associação via backend, sem confiar no redirect como pagamento).
+- [ ] Webhook autenticado do Asaas com evento idempotente, mapeamento do cliente/assinatura e reconciliação pelo Asaas antes de ativar ou renovar `editalume_entitlements`.
+- [ ] Falhas, atraso, estorno, cancelamento, expiração e reconciliação manual testados no ambiente de testes.
+- [ ] Autorização explícita do proprietário para expor link e receber pagamentos reais.
+
+O link existe e está validado quanto a **nome e preço**, mas a integração recorrente com a plataforma e o início das vendas **não estão concluídos**.
