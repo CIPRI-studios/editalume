@@ -26,3 +26,10 @@
 .pro-search-actions a{background:#204b37;color:#fff;text-decoration:none;font-size:11px;border-radius:8px;padding:10px 12px;font-weight:800}
 .pro-search-actions button{font-size:11px;background:#edf3ed;color:#204b37;padding:10px 12px}
 @media(max-width:600px){.pro-search{align-items:stretch;flex-direction:column}.pro-search-actions a,.pro-search-actions button{flex:1;text-align:center}}
+
+/* A visible subscription button requires server-side readiness. */
+#assinatura{scroll-margin-top:24px}
+#assinatura #pro-subscribe-status{font-size:12px;line-height:1.65}
+#assinatura .subscribe{display:block;width:100%;background:#204c38;color:white;border-radius:9px;min-height:48px;font-size:13px;font-weight:800;margin:14px 0;cursor:pointer}
+#assinatura .subscribe[hidden]{display:none}
+#assinatura small{display:block;font-size:11px;line-height:1.6;margin-top:10px}
