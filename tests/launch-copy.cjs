@@ -16,7 +16,7 @@ assert(home.includes('id="sob-medida"'),"Keep single manual report");
 assert(home.includes("link individual do Asaas"),"Send individual checkout after qualification");
 assert(!home.includes("https://www.asaas.com/000/c/"),"No automatic charge link before gates");
 assert(asaas.includes("nruxbdhrq24sn9db")&&asaas.includes("7ea8eja903t5z4wr"),"Both Asaas links documented");
-assert(asaas.includes("descrição ainda diz"),"Record Pro checkout description mismatch");
+assert(asaas.includes("problemas de formatação"),"Track remaining Asaas checkout formatting issue");
 
 assert(home.includes("pncp.gov.br/app/editais"),"Public official PNCP source always linked");
 assert(account.includes("CSV de até 200 resultados"),"Pro account teaser is not obsolete");
