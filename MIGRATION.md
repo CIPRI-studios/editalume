@@ -45,3 +45,12 @@
 
 ## Operations monitoring
 The independent radar-health.yml workflow checks 27 UFs at 08:00 Sao Paulo each day; it raises one GitHub issue when freshness fails and closes it on recovery. Failed site deployments are visible in GitHub Actions.
+
+## Prepared zero-cost Cloudflare hosting
+The Cloudflare Git repository connection is **not** provisioned yet. The exact
+build command, safe production cutover checklist and private Deploy Hook setup
+are documented in [`CLOUDFLARE_SETUP.md`](CLOUDFLARE_SETUP.md). The optional
+`.github/workflows/cloudflare-refresh.yml` is preconfigured for a four-hour
+Cloudflare deploy hook; it does not trigger an external deployment until the
+`CLOUDFLARE_PAGES_DEPLOY_HOOK` GitHub Actions secret is supplied. Never share
+that URL or any Supabase secret publicly.
