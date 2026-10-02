@@ -4,8 +4,9 @@ The independent production source is `CIPRI-studios/editalume`.
 The new repository has a **verified** GitHub Actions national collection at 05:00
 Brazil time. It collects bounded PNCP samples from all 27 UFs into the existing
 Editalume Supabase database using signed GitHub OIDC, without service keys on GitHub.
-The old monorepo's **national automatic** schedule has been disabled, with manual
-fallback still available. The new `.github/workflows/pages.yml` builds extra
+The old monorepo's **national automatic** schedule has been retired and
+its remaining manually triggered workflow runs offline regression tests only.
+National production updates now belong exclusively to this repository. The new `.github/workflows/pages.yml` builds extra
 static fallback snapshots from *public read-only data in that Supabase project* every
 four hours. Static snapshots are generated during deployment and are **not**
 committed to this repository.
