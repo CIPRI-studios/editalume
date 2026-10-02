@@ -1,0 +1,28 @@
+name: Editalume · preflight de PR
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: JavaScript syntax
+        run: |
+          node --check site/account.js
+          node --check site/account-bridge.js
+          node --check site/national.js
+          node --check site/app.js
+          node --check site/sw.js
+          node --check site/plan-policy.js
+          node --check tests/launch-copy.cjs
+      - name: Regressions offline
+        run: |
+          node tests/freemium-policy.cjs
+          node tests/pro-export.cjs
+          node tests/launch-copy.cjs
+          node tests/password-flow.cjs
