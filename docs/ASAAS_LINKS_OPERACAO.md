@@ -21,13 +21,13 @@ Em ambos os checkouts públicos foram observadas opções de boleto/Pix, cartão
 - Conferir e-mail comercial de suporte e publicar condições do Pro: recursos disponíveis, ausência de alertas automáticos na fase atual, data de ativação, cobrança mensal, cancelamento e suporte.
 - Não solicitar dados de cartão ou CPF por e-mail, chat ou planilha; Asaas trata os dados de pagamento.
 
-## 3. Operação do Sob Medida Individual
+## 3. Operação do Sob Medida Individual (fluxo de checkout direto)
 
-1. Receber por e-mail empresa, categoria, municípios/UF e necessidade.
-2. Analisar viabilidade na base: oferecer até três oportunidades pertinentes **quando disponíveis**, escopo, prazo e condições antes de cobrar.
-3. Após aceite, enviar **somente** o link avulso https://www.asaas.com/000/c/7ea8eja903t5z4wr .
-4. Confirmar quitação real no painel Asaas antes de entregar e anotar status mínimo no CRM. Não ativar Pro por esse pagamento.
-5. Respeitar pilotos gratuitos já prometidos.
+1. O botão da seção Sob Medida leva diretamente ao link de compra única https://www.asaas.com/000/c/7ea8eja903t5z4wr. O site comunica escopo: até três oportunidades manualmente selecionadas **quando disponíveis na amostra**, sem garantia de oportunidade, contratação ou êxito.
+2. Existe uma ação separada **Informar dados do pedido**, que abre uma mensagem para `cipristudios@gmail.com` com nome/empresa, e-mail usado no Asaas, atividade/categoria, municípios/UF e observações. O cliente deve voltar ao Editalume após pagar para preencher esse briefing; o Asaas pode não redirecioná-lo automaticamente enquanto o fluxo do painel não for configurado.
+3. A equipe cruza a confirmação do pagamento **no painel do Asaas**, não por print, redirecionamento ou resposta declaratória. Não pedir dados do cartão. O serviço manual só é entregue após validação e alinhamento de prazo. Se não houver oportunidades pertinentes, comunicar prontamente o resultado e negociar encaminhamento com o comprador conforme as condições comerciais aplicáveis; definir e publicar termos de reembolso/cancelamento antes de intensificar vendas.
+4. Se o cliente quiser confirmar o escopo antes de comprar, o link de consulta prévia por e-mail continua disponível. A compra individual **nunca** ativa o Pro. Pilotos gratuitos já prometidos são respeitados.
+5. **Operação pendente no Asaas:** corrigir URL do vendedor (ainda aponta para projeto antigo) e validar identidade comercial. Em seguida, considerar configurar redirecionamento de pagamento aprovado para uma página de onboarding/briefing, sem interpretar o redirecionamento como comprovação de quitação.
 
 ## 4. Checklist para liberar assinatura Pro no site
 
