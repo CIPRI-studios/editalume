@@ -10,9 +10,7 @@ _Conferência pública dos checkouts: 02/10/2026. Os links abaixo já existem no
 
 Em ambos os checkouts públicos foram observadas opções de boleto/Pix, cartão de crédito e Pix; confirmar a disponibilidade efetiva no painel antes da venda.
 
-**Problema crítico de descrição:** embora o título do checkout mensal tenha sido corrigido para **Editalume Pro**, sua **descrição ainda diz "Relatório personalizado de oportunidades em licitações públicas"**. Essa entrega caracteriza o serviço humano Sob Medida, e não as ferramentas Pro. O proprietário deve editar a descrição do link mensal antes de divulgar. Sugestão segura enquanto não houver alertas:
-
-> Acesso mensal às funcionalidades Editalume Pro: filtros avançados, busca e navegação ampliadas, exportação CSV de até 200 resultados, indicadores da amostra, três pesquisas salvas e até 200 favoritos, condicionado à confirmação do pagamento e à ativação da conta cadastrada. Base pública amostral e não exaustiva. Alertas automáticos por e-mail não incluídos nesta fase.
+**Descrição atual verificada (02/10/2026):** o texto do Pro foi atualizado corretamente, incluindo filtros, exportação, buscas salvas, favoritos e ressalva dos alertas. **Restam problemas de formatação:** título e introdução duplicados e marcadores de lista com barras invertidas/asteriscos literais. Corrigir no Asaas em texto simples e conferir a página pública após salvar.
 
 **Não divulgar esse checkout ainda:** webhook autenticado, reconciliação do pagamento e vínculo Asaas–Supabase não estão em produção. A página do site permanece em lista de interesse até concluir testes reais e autorização de lançamento. **Criar assinatura no Asaas NÃO confere automaticamente acesso Pro.**
 
