@@ -1,0 +1,58 @@
+name: Editalume · national collection freshness monitor
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/national-health.yml'
+      - 'radar/build_snapshots.py'
+  schedule:
+    - cron: '0 16 * * *' # 13:00 Brazil time; validate 05:00 national collection
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check all 27 UFs without requesting PNCP or exposing secrets
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from datetime import datetime,timezone,timedelta
+          from pathlib import Path
+          from radar.build_snapshots import public_config,request_json
+          api,key=public_config(Path("site/national.js").read_text(encoding="utf-8"))
+          docs=request_json(api,key,"editalume_uf_coverage",{
+              "select":"uf,status,last_attempt_at,last_success_at",
+              "order":"uf.asc","limit":"27"})
+          expected=set("AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split())
+          now=datetime.now(timezone.utc)
+          actual={x.get("uf"):x for x in docs if isinstance(x,dict) and x.get("uf") in expected}
+          invalid=[]
+          for uf in sorted(expected):
+              row=actual.get(uf)
+              if not row:
+                  invalid.append(uf+": missing")
+                  continue
+              try:
+                  raw=row["last_success_at"]
+                  observed=datetime.fromisoformat(raw.replace("Z","+00:00"))
+                  if observed.tzinfo is None: raise ValueError("no timezone")
+                  age=now-observed.astimezone(timezone.utc)
+                  if age > timedelta(hours=36) or age < timedelta(minutes=-10):
+                      invalid.append(uf+": stale or future timestamp")
+              except (KeyError,TypeError,ValueError,AttributeError):
+                  invalid.append(uf+": no trustworthy last_success_at")
+          if invalid:
+              for detail in invalid: print("::error::National PNCP sample "+detail)
+              raise SystemExit("National sync failed daily freshness check for "+str(len(invalid))+" UF(s)")
+          partial=[uf for uf,row in actual.items() if row.get("status")!="complete_sample"]
+          print("PASS: all 27 UFs have successful bounded collection within 36h. This is NOT exhaustive PNCP coverage.")
+          if partial:
+              print("::notice::"+str(len(partial))+" UFs are partial samples or otherwise limited; verify all notices with PNCP.")
+          PY
