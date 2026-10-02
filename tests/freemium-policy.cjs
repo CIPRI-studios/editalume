@@ -67,11 +67,11 @@ assert(app.includes('const sort=premium?$("sort").value:"deadline"'),"Free SP or
 assert(html.includes('id="sp-advanced" disabled'),"SP advanced filters disabled for guests");
 assert(html.includes('id="sp-upgrade-tip"'),"SP Free upgrade explanation available");
 const sw=fs.readFileSync("site/sw.js","utf8");
-assert(sw.includes("oneoff-checkout-20261002-1")&&sw.includes("plan-policy.js?v=2"),"Checkout release invalidates previous PWA cache");
+assert(sw.includes("asaas-pro-gated-20261002-1")&&sw.includes("plan-policy.js?v=2"),"New billing page invalidates PWA cache");
 const cssRef=html.match(/href="\.\/(style\.css\?v=[^"]+)"/)?.[1];
 assert(cssRef&&sw.includes(cssRef),"The SW must precache the same versioned CSS referenced by the page");
 assert(sw.includes("app.js?v=free-sp-20261001-1"));
-assert(sw.includes("account.js?v=4")&&sw.includes("national.js?v=freemium-20261001-4"));
+assert(sw.includes("account.js?v=5")&&sw.includes("national.js?v=freemium-20261001-4"));
 assert(national.includes('headers.Authorization="Bearer "+token'),"Pro requests must send a Supabase JWT to the backend");
 assert(account.includes("async function getAccessToken(){"),"Pro JWT token getter required");
 assert(account.includes("session?.user?.id===state.user.id"),"Never use a mismatched account token");
