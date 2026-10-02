@@ -7,7 +7,7 @@
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <title>Minha conta · Editalume</title>
 <link rel="stylesheet" href="./account.css?v=3">
-<script type="module" src="./account.js?v=4"></script>
+<script type="module" src="./account.js?v=5"></script>
 </head><body>
 <a class="skip" href="#main">Pular para conteúdo</a>
 <header class="top"><a class="logo" href="./">editalume<span>.</span></a><a class="back" href="./#brasil">← Voltar à pesquisa</a></header>
@@ -49,10 +49,14 @@
  <button type="button" id="account-import" class="quiet" hidden>Importar favoritos deste dispositivo</button>
  <div id="account-favorites" class="favorite-list"></div>
  <a class="cta" href="./#brasil">Encontrar oportunidades ↗</a>
- <div class="plan-teaser"><h3>Editalume Pro · R$ 49,90/mês</h3>
-  <p>Já desenvolvemos filtros avançados, indicadores da amostra, CSV de até 200 resultados, três pesquisas salvas e até 200 favoritos para contas Pro verificadas. Alertas automáticos e contratação comercial ainda não estão disponíveis.</p>
-  <a href="mailto:cipristudios@gmail.com?subject=Tenho%20interesse%20no%20Editalume%20Pro%20R%24%2049%2C90%2Fm%C3%AAs">Quero receber novidades do Pro ↗</a>
- </div>
+ <section class="plan-teaser" id="assinatura" aria-labelledby="subscribe-title">
+  <h3 id="subscribe-title">Editalume Pro · R$ 49,90/mês</h3>
+  <p>Filtros avançados, indicadores da amostra, CSV de até 200 resultados, três pesquisas salvas e até 200 favoritos para contas Pro verificadas. Alertas automáticos não estão disponíveis nesta fase.</p>
+  <p id="pro-subscribe-status" role="status">Conferindo a disponibilidade da recorrência...</p>
+  <button type="button" id="pro-subscribe" class="subscribe" hidden>Assinar Pro · R$ 49,90/mês ↗</button>
+  <a href="mailto:cipristudios@gmail.com?subject=Lista%20de%20interesse%20Editalume%20Pro">Quero receber novidades do Pro ↗</a>
+  <small>Pagamento no Asaas. O Pro só é liberado após confirmação financeira e validação da assinatura vinculada ao e-mail desta conta.</small>
+ </section>
 </section>
 <p class="fine">Editalume é independente do PNCP. Dados públicos podem sofrer alterações. Consulte nossa <a href="./privacidade.html">Política de privacidade</a>. Para solicitar acesso ou exclusão de seus dados: <a href="mailto:cipristudios@gmail.com?subject=Privacidade%20Editalume">cipristudios@gmail.com</a>.</p>
 </main><footer class="footer">Uma iniciativa CIPRI Studios · <a href="./">Editalume</a></footer>
