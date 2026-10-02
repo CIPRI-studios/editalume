@@ -23,7 +23,11 @@ assert(asaas.includes("problemas de formatação"),"Track remaining Asaas checko
 
 assert(home.includes("pncp.gov.br/app/editais"),"Public official PNCP source always linked");
 assert(account.includes("CSV de até 200 resultados"),"Pro account teaser is not obsolete");
-assert(account.includes("Alertas automáticos e contratação comercial ainda não estão disponíveis"),"Do not market inactive delivery");
+assert(account.includes("Alertas automáticos não estão disponíveis nesta fase"),"Do not sell inactive email alerts");
+assert(account.includes('id="pro-subscribe"')&&account.includes("hidden"),"Subscribe control starts disabled");
+const accountJS=fs.readFileSync("site/account.js","utf8");
+assert(accountJS.includes("state.billingReady")&&accountJS.includes("response.ok"),"Only the billing server can enable checkout");
+assert(!home.includes('href="https://www.asaas.com/000/c/nruxbdhrq24sn9db"'),"No unauthenticated recurring checkout link");
 assert(privacy.includes("Se você salvar editais ou pesquisas estratégicas na conta"),"Private saved-search handling disclosed");
 assert(privacy.includes("A contratação comercial do Pro e os alertas automáticos ainda não estão disponíveis"),"Privacy copy matches actual service");
 console.log("PASS: Free/Pro commercial copy, pilot status, privacy and unlaunched alert/billing disclaimers");
