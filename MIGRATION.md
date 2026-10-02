@@ -2,7 +2,7 @@
 
 This repository contains **only the Editalume static web app**, extracted from `caueccipriano/mylife-caue-app/public/radar/`. It does **not** move or modify the original multi-app repository.
 
-GitHub Pages (Actions source) publishes the `site/` directory at the repo's project URL, regardless of whether this repository is under a personal account or moved to the CIPRI Studios organization. Every four hours, the publishing workflow refreshes the three public fallback snapshots from the existing collector. National dynamic queries continue to use the existing Supabase Editalume database.
+GitHub Pages (Actions source) publishes the `site/` directory at the repo's project URL, regardless of whether this repository is under a personal account or moved to the CIPRI Studios organization. The independent repository now contains its own tested PNCP collectors and a daily workflow that publishes its three fallback snapshots directly to `site/`. On first deployment only, GitHub Pages can still bootstrap missing snapshots from the old source; once its own data exists, it prefers those independent snapshots. National dynamic queries continue to use the existing Supabase Editalume database. A national 05:00 workflow also exists in this repository; verify its first complete live run before disabling the original workflow.
 
 ## Setup checklist (manual)
 1. **Concluído:** repositório transferido para `CIPRI-studios/editalume`, preservando o antigo aplicativo multifuncional.
@@ -13,6 +13,9 @@ GitHub Pages (Actions source) publishes the `site/` directory at the repo's proj
 6. Keep the original Pages link available as an interim fallback until all of the above pass.
 
 ## Caveats
-- The fallback snapshot source still belongs to the former mono-repository, whose collector continues running. Eventually migrate the collector and CI to this dedicated repo before retiring the old Pages address.
+- New snapshots should be generated independently in this repository. The original mono-repository continues running during the verified cutover, to avoid breaking existing published URLs.
 - Research data is a rotating non-exhaustive sample. Validate availability and exact terms with the official PNCP.
-- A paid plan is **planned** at R$ 49.90/month. Subscriptions and automatic email delivery are **not active**.
+- Billing and notification readiness are separate from hosting migration. Consult `docs/ASAAS_LINKS_OPERACAO.md` and verify actual production flows before stating that Pro is active.
+
+## Cloudflare free deployment
+The repository is ready for an external Cloudflare Pages connection, but that account setup is not complete. See [`CLOUDFLARE_SETUP.md`](CLOUDFLARE_SETUP.md) in the repository root; preserve existing public links until new domain login, feedback and checkout are tested.
