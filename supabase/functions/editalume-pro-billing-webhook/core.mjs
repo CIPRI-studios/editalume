@@ -8,7 +8,7 @@ export function validProSubscription(sub,expectedId){
   sub.customer && !sub.deleted);
 }
 export function addCalendarMonth(date){
- if(typeof date!=="string"||!/^\\d{4}-\\d{2}-\\d{2}$/.test(date))return null;
+ if(typeof date!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(date))return null;
  const [year,month,day]=date.split("-").map(Number);
  const base=new Date(Date.UTC(year,month-1,day));
  if(!Number.isFinite(base.getTime())||base.toISOString().slice(0,10)!==date)return null;
