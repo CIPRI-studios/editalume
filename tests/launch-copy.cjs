@@ -9,6 +9,13 @@ for(const phrase of ["Prévia de cinco resultados","CSV de até 200 resultados",
 }
 assert(home.includes("R$ 49,90"),"Planned price should remain clear");
 assert(home.includes("cobrança recorrente continuam em desenvolvimento"),"No false live billing claim");
+assert(home.includes('id="sob-medida-mensal"'),"Monthly manual Sob Medida is a separate offer");
+assert(home.includes("R$ 49,90 <small>/ mês · assinatura recorrente"),"Monthly manual pricing is explicit");
+assert(home.includes("id=\"sob-medida\""),"Individual Sob Medida remains available");
+assert(home.includes("link individual do Asaas"),"One-off checkout is sent after feasibility confirmation");
+assert(!home.includes("https://www.asaas.com/000/c/"),"No unattended payment before merchant identity and scope are checked");
+assert(home.includes("não libera o Pro"),"Manual monthly checkout must not be marketed as Pro");
+
 assert(home.includes("pncp.gov.br/app/editais"),"Public official PNCP source always linked");
 assert(account.includes("CSV de até 200 resultados"),"Pro account teaser is not obsolete");
 assert(account.includes("Alertas automáticos e contratação comercial ainda não estão disponíveis"),"Do not market inactive delivery");
