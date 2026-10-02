@@ -147,3 +147,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{ou
 .plan-report-action .button{text-align:center}
 .plan-report-action span{font-size:11px;line-height:1.6;color:#536f5f}
 @media(max-width:760px){.plan-report{grid-template-columns:1fr;padding:22px}.plan-report h3{font-size:23px}}
+
+/* Sob Medida mensal: proposta separada do Pro e da compra individual. */
+.plan-report-monthly{margin-top:14px;background:linear-gradient(120deg,#f1f5ff,#f7fcf7);border-color:#c5d4c9}
+.plan-report-monthly .plan-report-eyebrow{color:#34576a}
+.plan-report-monthly .plan-report-action .button-outline{background:#fff;border:1px solid #345d49;color:#214b37}
