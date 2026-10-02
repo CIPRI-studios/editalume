@@ -1,0 +1,29 @@
+name: Editalume · free Cloudflare four-hour rebuild
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '45 */4 * * *' # 6x/day, staggered after independent GitHub Pages snapshot
+permissions:
+  contents: read
+concurrency:
+  group: editalume-cloudflare-refresh
+  cancel-in-progress: true
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    env:
+      PAGES_HOOK: ${{ secrets.CLOUDFLARE_PAGES_DEPLOY_HOOK }}
+    steps:
+      - name: Request Cloudflare Pages build of independently refreshed data
+        if: env.PAGES_HOOK != ''
+        shell: bash
+        run: |
+          set +x
+          curl --fail --silent --show-error --retry 2 --max-time 20 \
+            --request POST "$PAGES_HOOK"
+          echo "Cloudflare deploy hook accepted. Check actual deployment status in Cloudflare."
+      - name: Give setup instructions when no secret is configured
+        if: env.PAGES_HOOK == ''
+        run: |
+          echo "::notice::Connect Cloudflare Pages to this repository and save its production deploy-hook URL as the GitHub Actions secret CLOUDFLARE_PAGES_DEPLOY_HOOK. No new deployment was requested."
