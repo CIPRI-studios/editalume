@@ -14,12 +14,30 @@ const PUBLISHABLE=readKey(key("SUPABASE_PUBLISHABLE_KEYS"),key("SUPABASE_ANON_KE
 const SECRET=readKey(key("SUPABASE_SECRET_KEYS"),key("SUPABASE_SERVICE_ROLE_KEY"));
 const userEmail=x=>typeof x==="string"?x.trim().toLowerCase():"";
 const expectedLink=ENVIRONMENT==="production"?"https://www.asaas.com/000/c/nruxbdhrq24sn9db":key("ASAAS_SANDBOX_PRO_LINK_URL");
-function ready(){
+let linkCheckedAt=0,linkHealthy=false;
+async function ready(){
  const prefix=ENVIRONMENT==="production"?"ASAAS_LIVE":"ASAAS_SANDBOX";
- return (ENVIRONMENT!=="production"||key("ASAAS_LIVE_LAUNCH_ENABLED")==="true") &&
-  key(prefix+"_API_KEY").length>=16 && key(prefix+"_WEBHOOK_TOKEN").length>=32 &&
-  key(prefix+"_PRO_PAYMENT_LINK_ID").length>=4 && /^https:\/\//.test(expectedLink) &&
-  URL_BASE.length>12&&SECRET.length>15&&PUBLISHABLE.length>15;
+ const apiKey=key(prefix+"_API_KEY"),linkId=key(prefix+"_PRO_PAYMENT_LINK_ID");
+ if(ENVIRONMENT==="production"&&
+    (key("ASAAS_LIVE_LAUNCH_ENABLED")!=="true"||key("ASAAS_LIVE_QA_APPROVED")!=="true"))
+  return false;
+ if(apiKey.length<16||key(prefix+"_WEBHOOK_TOKEN").length<32||linkId.length<4||
+    !/^https:\/\//.test(expectedLink)||!URL_BASE||!SECRET||!PUBLISHABLE)return false;
+ if(Date.now()-linkCheckedAt<60000)return linkHealthy;
+ linkHealthy=false;
+ try{
+  const api=ENVIRONMENT==="production"?"https://api.asaas.com/v3":"https://api-sandbox.asaas.com/v3";
+  const response=await fetch(api+"/paymentLinks/"+encodeURIComponent(linkId),{
+   headers:{"access_token":apiKey,"accept":"application/json","User-Agent":"Editalume-CIPRI/1.0"}
+  });
+  if(!response.ok)return false;
+  const link=await response.json();
+  linkHealthy=Boolean(link.id===linkId&&Number(link.value)===49.90&&link.chargeType==="RECURRENT"&&
+    link.subscriptionCycle==="MONTHLY"&&link.active!==false&&typeof link.url==="string"&&
+    new URL(link.url).pathname===new URL(expectedLink).pathname);
+  linkCheckedAt=Date.now();
+  return linkHealthy;
+ }catch{return false;}
 }
 async function db(path,init={}){
  const h={"apikey":SECRET,"Content-Type":"application/json",...(init.headers||{})};
@@ -49,9 +67,9 @@ Deno.serve(async req=>{
    const response=await db("editalume_billing_intents?environment=eq."+ENVIRONMENT+"&user_id=eq."+encodeURIComponent(user.id)+"&select=created_at&limit=1");
    if(!response.ok)return safeJSON({error:"billing_status_unavailable"},503);
    const registrations=await response.json();
-   return safeJSON({ready:ready(),registered:registrations.length>0,environment:ENVIRONMENT});
+   return safeJSON({ready:await ready(),registered:registrations.length>0,environment:ENVIRONMENT});
   }
-  if(!ready())return safeJSON({error:"payment_integration_not_enabled"},503);
+  if(!await ready())return safeJSON({error:"payment_integration_not_enabled"},503);
   if(Number(req.headers.get("content-length")||0)>1024)return safeJSON({error:"body_too_large"},413);
   const existing=await db("editalume_billing_intents?environment=eq."+ENVIRONMENT+"&user_id=eq."+encodeURIComponent(user.id)+"&select=verified_email&limit=1");
   if(!existing.ok)return safeJSON({error:"lookup_failed"},503);
