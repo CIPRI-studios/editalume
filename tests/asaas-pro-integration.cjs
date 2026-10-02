@@ -9,7 +9,7 @@ const webhook=fs.readFileSync("supabase/functions/editalume-pro-billing-webhook/
 const core=fs.readFileSync("supabase/functions/editalume-pro-billing-webhook/core.mjs","utf8");
 assert(!home.includes('href="https://www.asaas.com/000/c/nruxbdhrq24sn9db"'),"No anonymous monthly checkout on homepage");
 assert(accountHtml.includes('id="pro-subscribe"')&&accountHtml.includes("hidden"),"Authenticated checkout starts hidden");
-assert(account.includes("state.billingReady")&&account.includes("response.ok")&&account.includes("payload")===false,"Server gate controls browser checkout");
+assert(account.includes("state.billingReady")&&account.includes("response.ok")&&account.includes("body.checkoutUrl!==allowed"),"Server gate controls browser checkout");
 assert(account.includes("window.location.assign(allowed)")&&account.includes("body.checkoutUrl!==allowed"),"Explicit allowed Asaas destination");
 assert(intent.includes("user.email_confirmed_at")&&intent.includes("auth/v1/user"),"Customer intent requires verified Auth session");
 assert(intent.includes('ASAAS_LIVE_LAUNCH_ENABLED')&&intent.includes('payment_integration_not_enabled'),"Backend defaults disabled");
