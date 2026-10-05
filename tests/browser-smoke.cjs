@@ -82,10 +82,12 @@ async function check(page,{pro=false,label}){
  assert.equal(await page.locator("#national-locked").isVisible(),!pro,label+" Free upgrade prompt");
  assert.equal(await page.locator(".national-result-card .tender-analysis-trigger").count(),expected,label+" analysis actions");
  if(label==="mobile-390-free"){
+  // This one viewport exercises the deployed read-only bridge against PNCP.
+  await page.unroute("https://jhxhbgprjqppzfrjdfvj.supabase.co/functions/v1/editalume-pncp-document**");
   await page.locator(".national-result-card .tender-analysis-trigger").first().click();
   await page.locator(".tender-analysis-panel").waitFor({state:"visible",timeout:8000});
   assert.equal(await page.locator(".tender-analysis-object").isVisible(),true,"Tender summary modal visible");
-  assert((await page.locator(".tender-analysis-object").innerText()).includes("LIMPEZA"),"Tender official object rendered");
+  assert((await page.locator(".tender-analysis-object").innerText()).trim().length>30,"Tender official object rendered");
   assert((await page.locator(".tender-source-note").innerText()).includes("PNCP"),"Tender source attribution rendered");
   const modalBounds=await page.locator(".tender-analysis-panel").boundingBox();
   assert(modalBounds&&modalBounds.width<=390,"Tender analysis fits mobile viewport");
