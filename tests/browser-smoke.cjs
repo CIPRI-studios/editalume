@@ -8,7 +8,7 @@ const base="http://127.0.0.1:4173/";
 const states="AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" ");
 const now=new Date().toISOString(),later=days=>new Date(Date.now()+days*86400000).toISOString();
 const publicNational=Array.from({length:20},(_,i)=>({
- pncp_id:"00000000000001-1-"+(i+1)+"/2026",uf:"SP",municipality:"Jundiaí",
+ pncp_id:i===0?"05149726000104-1-000026/2026":"00000000000001-1-"+(i+1)+"/2026",uf:i===0?"RS":"SP",municipality:i===0?"Piratini":"Jundiaí",
  agency:"Órgão municipal de demonstração",title:"SERVIÇOS DE LIMPEZA "+(i+1),
  modality:"Pregão eletrônico",estimated_value_brl:1000+i*100,closing_at:later(5+i),
  sector_focus:true,relevance:2,first_observed_at:now,last_observed_at:now,total_count:20
@@ -30,6 +30,16 @@ const cors={"access-control-allow-origin":"*","access-control-allow-methods":"GE
 async function mock(page,traffic){
  await page.route("**/search-index.json*",route=>route.fulfill({json:fallback}));
  await page.route("**/refresh-status.json*",route=>route.fulfill({json:{degraded:false,attempted_at:now}}));
+ await page.route("https://jhxhbgprjqppzfrjdfvj.supabase.co/functions/v1/editalume-pncp-document**",async route=>{
+  const req=route.request(),u=new URL(req.url());
+  if(u.searchParams.get("action")==="document")return route.fulfill({status:415,json:{ok:false,error:"PDF fixture unavailable"},headers:cors});
+  return route.fulfill({json:{ok:true,pncp_id:u.searchParams.get("pncp_id"),detail:{
+   numeroControlePNCP:u.searchParams.get("pncp_id"),objetoCompra:"SERVIÇOS DE LIMPEZA DEMONSTRAÇÃO",
+   orgaoEntidade:{razaoSocial:"Órgão municipal de demonstração"},modalidadeNome:"Pregão eletrônico",
+   dataEncerramentoProposta:later(10),valorTotalEstimado:125000,processo:"PROC-2026-01",
+   modoDisputaNome:"Aberto",srp:true,amparoLegal:{nome:"Lei 14.133/2021"}
+  },documents:[]},headers:cors});
+ });
  await page.route("https://jhxhbgprjqppzfrjdfvj.supabase.co/rest/v1/**",async route=>{
   const req=route.request(),url=req.url(),method=req.method();
   if(method==="OPTIONS")return route.fulfill({status:204,headers:cors});
@@ -70,6 +80,20 @@ async function check(page,{pro=false,label}){
  assert.equal(await page.locator("#national-download").isEnabled(),pro,label+" CSV availability");
  assert.equal(await page.locator("#national-pro-tools").isVisible(),pro,label+" saved search dashboard");
  assert.equal(await page.locator("#national-locked").isVisible(),!pro,label+" Free upgrade prompt");
+ assert.equal(await page.locator(".national-result-card .tender-analysis-trigger").count(),expected,label+" analysis actions");
+ if(label==="mobile-390-free"){
+  // This one viewport exercises the deployed read-only bridge against PNCP.
+  await page.unroute("https://jhxhbgprjqppzfrjdfvj.supabase.co/functions/v1/editalume-pncp-document**");
+  await page.locator(".national-result-card .tender-analysis-trigger").first().click();
+  await page.locator(".tender-analysis-panel").waitFor({state:"visible",timeout:8000});
+  assert.equal(await page.locator(".tender-analysis-object").isVisible(),true,"Tender summary modal visible");
+  assert((await page.locator(".tender-analysis-object").innerText()).trim().length>30,"Tender official object rendered");
+  assert((await page.locator(".tender-source-note").innerText()).includes("PNCP"),"Tender source attribution rendered");
+  const modalBounds=await page.locator(".tender-analysis-panel").boundingBox();
+  assert(modalBounds&&modalBounds.width<=390,"Tender analysis fits mobile viewport");
+  await page.locator(".tender-analysis-close").click();
+ }
+
  if(pro){
   await page.waitForFunction(()=>document.getElementById("national-insight-total")?.textContent==="20",
    {timeout:12000});
@@ -94,7 +118,20 @@ async function check(page,{pro=false,label}){
  await page.screenshot({path:"tests/qa-artifacts/"+label+".png",fullPage:false,animations:"disabled"});
  console.log("PASS "+label+": "+expected+" national results, SP preview, correct tier controls and no overflow");
 }
+async function checkLiveBridge(){
+ const url="https://jhxhbgprjqppzfrjdfvj.supabase.co/functions/v1/editalume-pncp-document?action=metadata&pncp_id="+encodeURIComponent("05149726000104-1-000026/2026");
+ const response=await fetch(url,{headers:{Origin:"http://127.0.0.1:4173",Accept:"application/json"}});
+ const raw=await response.text();
+ console.log("LIVE_PNCP_BRIDGE",response.status,raw.slice(0,500));
+ assert.equal(response.status,200,"Live PNCP bridge HTTP status");
+ const data=JSON.parse(raw);
+ assert.equal(data.ok,true,"Live PNCP bridge response");
+ assert.equal(data.pncp_id,"05149726000104-1-000026/2026","Live PNCP control number");
+ assert(data.detail&&typeof data.detail==="object","Live PNCP detail payload");
+ assert(Array.isArray(data.documents),"Live PNCP document list");
+}
 async function run(){
+ await checkLiveBridge();
  fs.mkdirSync("tests/qa-artifacts",{recursive:true});
  const chromiumBrowser=await chromium.launch({headless:true});
  try{

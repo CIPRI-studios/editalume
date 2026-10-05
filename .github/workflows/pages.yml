@@ -46,7 +46,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for file in index.html conta.html avaliar.html privacidade.html manifest.webmanifest sw.js icon.svg account.js national.js app.js company-fit-core.js company-fit.js company-fit.css; do
+          for file in index.html conta.html avaliar.html privacidade.html manifest.webmanifest sw.js icon.svg account.js national.js app.js company-fit-core.js company-fit.js company-fit.css tender-analysis-core.js tender-analysis.js tender-analysis.css; do
             test -s "site/$file"
           done
           node --check site/account.js
@@ -54,10 +54,14 @@ jobs:
           node --check site/national.js
           node --check site/company-fit-core.js
           node --check site/company-fit.js
+          node --check site/tender-analysis-core.js
+          node --check site/tender-analysis.js
           node --check site/app.js
           node --check site/sw.js
           node --check site/plan-policy.js
           node tests/company-fit.cjs
+          node tests/tender-analysis.cjs
+          node tests/pncp-document-bridge.cjs
           node tests/freemium-policy.cjs
           node tests/pro-export.cjs
           node tests/launch-copy.cjs

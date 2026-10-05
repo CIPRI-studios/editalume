@@ -178,7 +178,10 @@ function renderMatches(items){
    node("span","company-match-label","VALOR ESTIMADO"),node("strong",null,row.estimated_value_brl>0?money.format(Number(row.estimated_value_brl)):"Não informado"));
   const a=node("a","company-match-link","Conferir edital no PNCP ↗");
   a.href=core.officialPncpUrl(row);a.target="_blank";a.rel="noopener noreferrer";
-  side.append(a);card.append(main,side);root.append(card);
+  side.append(a);
+  const analyze=node("button","tender-analysis-trigger","Analisar edital ↗");analyze.type="button";
+  analyze.addEventListener("click",()=>window.EditalumeTenderAnalysis?.open(row,analyze));side.append(analyze);
+  card.append(main,side);root.append(card);
  }
 }
 async function submit(event){
