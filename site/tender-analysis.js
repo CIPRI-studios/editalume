@@ -182,14 +182,24 @@ async function analyzeDocuments(docs,button,status,results){
 }
 async function open(row,trigger){
  ensureModal();lastFocus=trigger||document.activeElement;overlay.hidden=false;document.documentElement.style.overflow="hidden";
- clear(body);body.append(node("div","tender-analysis-loading","Consultando dados e anexos oficiais do PNCP..."));
  const pncpId=row?.pncp_id||row?.id;
  if(!core.parsePncpId(pncpId)){
   clear(body);body.append(node("div","tender-analysis-error","Este registro não possui um controle PNCP válido para análise."));return;
  }
- try{renderMetadata(await metadata(pncpId),row)}
- catch(error){clear(body);body.append(node("div","tender-analysis-error",error?.message||"Não foi possível analisar este edital agora."))}
+ // Render the validated Editalume record immediately; PNCP enriches it in place.
+ renderMetadata({detail:{numeroControlePNCP:pncpId},documents:[]},row);
+ const loading=node("p","tender-deep-status","Atualizando dados e anexos diretamente do PNCP...");
+ body.prepend(loading);
  panel.scrollTop=0;
+ try{
+  const payload=await metadata(pncpId);
+  if(current?.row===row)renderMetadata(payload,row);
+ }catch(error){
+  if(current?.row===row){
+   loading.textContent=(error?.message||"PNCP temporariamente indisponível.")+" O resumo acima usa o último registro validado pelo Editalume.";
+   body.prepend(loading);
+  }
+ }
 }
 window.EditalumeTenderAnalysis={open,close:closeModal};
 })();
