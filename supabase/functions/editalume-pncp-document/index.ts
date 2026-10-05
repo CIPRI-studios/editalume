@@ -9,7 +9,8 @@ const ORIGINS=new Set([
  "http://127.0.0.1:4173",
  "http://localhost:4173"
 ]);
-const PNCP_INTEGRATION="https://pncp.gov.br/api/pncp";\nconst PNCP_CONSULTA="https://pncp.gov.br/api/consulta";
+const PNCP_INTEGRATION="https://pncp.gov.br/api/pncp";
+const PNCP_CONSULTA="https://pncp.gov.br/api/consulta";
 const MAX_PDF_BYTES=12*1024*1024;
 const WINDOW_MS=60_000,MAX_PER_WINDOW=40;
 const buckets=new Map();
@@ -84,7 +85,8 @@ Deno.serve(async(req)=>{
  const url=new URL(req.url),action=url.searchParams.get("action")||"metadata";
  const pncpId=url.searchParams.get("pncp_id")||"",parsed=parsePncpId(pncpId);
  if(!parsed)return replyJson({ok:false,error:"Controle PNCP inválido"},400,origin,"no-store");
- const integrationBase=PNCP_INTEGRATION+"/v1/orgaos/"+parsed.cnpj+"/compras/"+parsed.year+"/"+parsed.sequence;\n const detailBase=PNCP_CONSULTA+"/v1/orgaos/"+parsed.cnpj+"/compras/"+parsed.year+"/"+parsed.sequence;
+ const integrationBase=PNCP_INTEGRATION+"/v1/orgaos/"+parsed.cnpj+"/compras/"+parsed.year+"/"+parsed.sequence;
+ const detailBase=PNCP_CONSULTA+"/v1/orgaos/"+parsed.cnpj+"/compras/"+parsed.year+"/"+parsed.sequence;
 
  try{
   if(action==="metadata"){
