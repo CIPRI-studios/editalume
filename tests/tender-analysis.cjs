@@ -21,9 +21,12 @@ assert.equal(detail.estimatedValue,215691);
 
 const docs=core.rankDocuments(core.normalizeDocuments([
  {sequencialDocumento:2,titulo:"Anexo I",tipoDocumentoNome:"Anexo",url:"https://pncp.gov.br/a.pdf"},
- {sequencialDocumento:1,titulo:"Edital 79/2026",tipoDocumentoNome:"Edital",url:"https://pncp.gov.br/e.pdf"}
+ {sequencialDocumento:1,titulo:"Edital 79/2026",tipoDocumentoNome:"Edital",url:"https://pncp.gov.br/documento/123"},
+ {sequencialDocumento:3,titulo:"Arquivos auxiliares",tipoDocumentoNome:"ZIP",url:"https://pncp.gov.br/a.zip"}
 ]));
 assert.equal(docs[0].sequence,1);
+assert.equal(docs[0].isPdf,true);
+assert.equal(docs.find(x=>x.sequence===3).isPdf,false);
 
 const evidence=core.extractEvidence([
  {page:3,text:"Para fins de habilitação jurídica deverão ser apresentados os documentos previstos neste edital."},
