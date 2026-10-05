@@ -25,7 +25,7 @@ jobs:
           cp supabase/functions/editalume-pro-billing-webhook/index.ts /tmp/editalume-webhook.mjs
           cp supabase/functions/editalume-pro-billing-intent/index.ts /tmp/editalume-intent.mjs
           node --check /tmp/editalume-webhook.mjs
-          node --check /tmp/editalume-intent.mjs
+          node --check /tmp/editalume-intent.mjs\n          node --check /tmp/editalume-pncp-document.mjs
       - name: Regressions offline
         run: |
           node tests/company-fit.cjs
