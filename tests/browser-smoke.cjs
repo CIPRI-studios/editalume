@@ -63,6 +63,11 @@ async function mock(page,traffic){
 async function check(page,{pro=false,label}){
  const errors=[],traffic=[];
  page.on("pageerror",error=>errors.push(error.message));
+ if(label==="mobile-390-free")await page.addInitScript(()=>{
+  localStorage.setItem("editalume_company_fit_v1",JSON.stringify({
+   name:"Fornecedor Saúde",uf:"TO",city:"Palmas",keywords:["equipamento","hospitalar","mobiliario"]
+  }));
+ });
  if(pro)await page.addInitScript(()=>{
   window.EditalumeAccount={user:{id:"test-pro"},isPro:true,favorites:[],
    getAccessToken:async()=> "fake-pro-jwt",
@@ -89,6 +94,9 @@ async function check(page,{pro=false,label}){
   assert.equal(await page.locator(".tender-analysis-object").isVisible(),true,"Tender summary modal visible");
   assert((await page.locator(".tender-analysis-object").innerText()).trim().length>30,"Tender official object rendered");
   assert((await page.locator(".tender-source-note").innerText()).includes("PNCP"),"Tender source attribution rendered");
+  assert.equal(await page.locator(".tender-participation").isVisible(),true,"Participation recommendation visible");
+  assert((await page.locator(".tender-participation-score").innerText()).includes("/100"),"Participation score rendered");
+  assert((await page.locator(".tender-participation-context").innerText()).includes("Fornecedor Saúde"),"Company profile used in decision");
   const modalBounds=await page.locator(".tender-analysis-panel").boundingBox();
   assert(modalBounds&&modalBounds.width<=390,"Tender analysis fits mobile viewport");
   await page.locator(".tender-analysis-close").click();

@@ -147,5 +147,64 @@ function officialNoticeUrl(pncpId){
  const p=parsePncpId(pncpId);if(!p)return null;
  return "https://pncp.gov.br/app/editais/"+p.cnpj+"/"+p.year+"/"+p.sequence;
 }
-return {norm,parsePncpId,normalizeDetail,normalizeDocuments,rankDocuments,extractEvidence,evidenceSummary,officialNoticeUrl};
+function sameText(a,b){return Boolean(norm(a).trim())&&norm(a).trim()===norm(b).trim()}
+function uniqueEvidence(evidence,category){
+ return (Array.isArray(evidence)?evidence:[]).filter(x=>x?.category===category);
+}
+function caution(text,evidence){return {text,evidence:evidence||null}}
+function participationDecision(detail,row,profile,evidence,options){
+ const p=profile&&typeof profile==="object"?profile:null;
+ const words=Array.isArray(p?.keywords)?p.keywords.map(norm).filter(Boolean).slice(0,10):[];
+ if(!words.length){
+  return {
+   available:false,score:null,label:"Crie o perfil da empresa",tone:"neutral",stage:"profile_missing",
+   positives:[],cautions:[caution("Use seu CNPJ ou descreva o que a empresa vende para calcular uma prioridade personalizada.")]
+  };
+ }
+ const d=detail&&typeof detail==="object"?detail:{},r=row&&typeof row==="object"?row:{};
+ const text=norm([d.object,r.title,r.object,d.additional].filter(Boolean).join(" "));
+ const matched=words.filter(word=>text.includes(word));
+ let score=35;
+ const positives=[],cautions=[];
+ if(matched.length>=3){score+=30;positives.push("Objeto muito alinhado ao perfil: "+matched.slice(0,3).join(", ")+".")}
+ else if(matched.length===2){score+=24;positives.push("Objeto alinhado a "+matched.join(" e ")+".")}
+ else if(matched.length===1){score+=15;positives.push("Há aderência ao termo “"+matched[0]+"”.")}
+ else {score-=20;cautions.push(caution("O objeto tem pouca aderência às palavras-chave do perfil cadastrado."));}
+
+ const uf=String(d.uf||r.uf||"").toUpperCase(),city=d.municipality||r.municipality||r.city||"";
+ if(p.uf&&uf&&String(p.uf).toUpperCase()===uf){score+=8;positives.push("A oportunidade está no mesmo estado da empresa.");}
+ if(p.city&&city&&sameText(p.city,city)){score+=5;positives.push("A oportunidade está no mesmo município da empresa.");}
+
+ const opts=options&&typeof options==="object"?options:{nowMs:options};
+ const end=Date.parse(d.endAt||r.closing_at||r.deadline||"");
+ const clock=Number.isFinite(Number(opts.nowMs))?Number(opts.nowMs):Date.now();
+ let ended=false;
+ if(Number.isFinite(end)){
+  const days=(end-clock)/86400000;
+  if(days>=7){score+=12;positives.push("Há pelo menos 7 dias até o encerramento das propostas.");}
+  else if(days>=3){score+=6;positives.push("Ainda há alguns dias para preparar a proposta.");}
+  else if(days>=1){score-=5;cautions.push(caution("Prazo curto: menos de 3 dias para o encerramento."));}
+  else if(days>=0){score-=15;cautions.push(caution("Prazo crítico: menos de 24 horas para o encerramento."));}
+  else {score=0;ended=true;cautions.push(caution("O prazo informado já encerrou."));}
+ }
+
+ const ev=Array.isArray(evidence)?evidence:[];
+ const visit=uniqueEvidence(ev,"visita"),sample=uniqueEvidence(ev,"amostra"),guarantee=uniqueEvidence(ev,"garantia"),habil=uniqueEvidence(ev,"habilitacao");
+ if(visit.length){score-=10;cautions.push(caution("Foi localizado trecho sobre visita técnica/vistoria; confira a página citada.",visit[0]));}
+ if(sample.length){score-=7;cautions.push(caution("Foi localizado trecho sobre amostra ou prova de conceito; confira a página citada.",sample[0]));}
+ if(guarantee.length){score-=6;cautions.push(caution("Foi localizado trecho sobre garantia; confirme valor e condições na fonte.",guarantee[0]));}
+ if(habil.length){
+  const technical=habil.find(x=>/atestado de capacidade|qualificacao tecnica/.test(norm((x.term||"")+" "+(x.snippet||""))));
+  if(technical){score-=6;cautions.push(caution("Foi localizada exigência relacionada à qualificação técnica/atestado; valide se sua empresa atende.",technical));}
+  else cautions.push(caution("Há trechos de habilitação documental para conferir antes de participar.",habil[0]));
+ }
+ score=Math.max(0,Math.min(95,Math.round(score)));
+ const label=ended?"Prazo encerrado":score>=75?"Boa candidata para avançar":score>=55?"Vale analisar com atenção":"Baixa prioridade por enquanto";
+ const tone=ended?"low":score>=75?"good":score>=55?"attention":"low";
+ return {
+  available:true,score,label,tone,stage:opts.evidenceReviewed?"documental":"preliminar",
+  matched,positives,cautions
+ };
+}
+return {norm,parsePncpId,normalizeDetail,normalizeDocuments,rankDocuments,extractEvidence,evidenceSummary,officialNoticeUrl,participationDecision};
 });

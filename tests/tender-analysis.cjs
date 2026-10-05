@@ -37,4 +37,34 @@ assert(evidence.some(x=>x.category==="habilitacao"&&x.page===3));
 assert(evidence.some(x=>x.category==="visita"&&x.page===12));
 assert(evidence.some(x=>x.category==="pagamento"&&x.page===18));
 assert(evidence.every(x=>x.source==="Edital 79/2026"));
+const profile={name:"Fornecedor Saúde",uf:"TO",city:"Palmas",keywords:["equipamento","hospitalar","mobiliario"]};
+const opportunity={
+ object:"Aquisição de equipamentos médico-hospitalares e mobiliário assistencial",
+ uf:"TO",municipality:"Palmas",endAt:"2026-10-20T12:00:00-03:00"
+};
+const preliminary=core.participationDecision(opportunity,{},profile,[],{nowMs:Date.parse("2026-10-05T12:00:00-03:00"),evidenceReviewed:false});
+assert.equal(preliminary.available,true);
+assert(preliminary.score>=80);
+assert.equal(preliminary.label,"Boa candidata para avançar");
+assert.equal(preliminary.stage,"preliminar");
+assert(preliminary.positives.some(x=>x.includes("mesmo município")));
+
+const riskEvidence=[
+ {category:"visita",page:8,source:"Edital.pdf",term:"visita tecnica",snippet:"Será obrigatória visita técnica ao local."},
+ {category:"habilitacao",page:14,source:"Edital.pdf",term:"atestado de capacidade",snippet:"Apresentar atestado de capacidade técnica compatível."}
+];
+const refined=core.participationDecision(opportunity,{},profile,riskEvidence,{nowMs:Date.parse("2026-10-05T12:00:00-03:00"),evidenceReviewed:true});
+assert(refined.score<preliminary.score);
+assert.equal(refined.stage,"documental");
+assert(refined.cautions.some(x=>x.evidence?.page===8));
+assert(refined.cautions.some(x=>x.evidence?.page===14));
+
+const missing=core.participationDecision(opportunity,{},null,[],{nowMs:Date.parse("2026-10-05T12:00:00-03:00")});
+assert.equal(missing.available,false);
+assert.equal(missing.score,null);
+
+const ended=core.participationDecision({...opportunity,endAt:"2026-10-01T12:00:00-03:00"},{},profile,[],{nowMs:Date.parse("2026-10-05T12:00:00-03:00")});
+assert.equal(ended.score,0);
+assert.equal(ended.label,"Prazo encerrado");
+
 console.log("PASS tender analysis core");
