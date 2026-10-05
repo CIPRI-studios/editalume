@@ -109,8 +109,9 @@ Deno.serve(async(req)=>{
   const buffer=await upstream.arrayBuffer();
   if(buffer.byteLength>MAX_PDF_BYTES)return replyJson({ok:false,error:"PDF acima do limite desta versão"},413,origin,"no-store");
   const contentType=(upstream.headers.get("content-type")||"").toLowerCase();
-  const looksPdf=contentType.includes("pdf")||/\.pdf(?:$|[?#])/i.test(target.toString())||/\bpdf\b/i.test(selected.tipoDocumentoNome+" "+selected.titulo);
-  if(!looksPdf)return replyJson({ok:false,error:"Este anexo não é um PDF textual compatível"},415,origin,"no-store");
+  const magic=new TextDecoder("ascii").decode(new Uint8Array(buffer,0,Math.min(5,buffer.byteLength)));
+  const looksPdf=magic==="%PDF-"||contentType.includes("pdf")||/\.pdf(?:$|[?#])/i.test(target.toString());
+  if(!looksPdf)return replyJson({ok:false,error:"Este anexo não é um PDF compatível"},415,origin,"no-store");
 
   const title=selected.titulo.replace(/[\r\n"]/g," ").slice(0,180);
   return new Response(buffer,{
