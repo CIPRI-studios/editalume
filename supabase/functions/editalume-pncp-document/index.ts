@@ -99,10 +99,11 @@ Deno.serve(async(req)=>{
   const docs=cleanDocs(await pncpJson(base+"/arquivos"));
   const selected=docs.find(doc=>doc.sequencialDocumento===documentSequence);
   if(!selected)return replyJson({ok:false,error:"Documento não localizado no PNCP"},404,origin,"no-store");
-  const target=safeDocumentUrl(selected.url);
-  if(!target)return replyJson({ok:false,error:"URL oficial do documento inválida"},422,origin,"no-store");
 
-  const upstream=await fetchWithTimeout(target.toString(),{headers:{"Accept":"application/pdf,application/octet-stream;q=0.9,*/*;q=0.1"}});
+  // Use PNCP's own documented download endpoint instead of proxying the URL
+  // returned in document metadata. This keeps every upstream request pinned to PNCP.
+  const documentEndpoint=base+"/arquivos/"+documentSequence;
+  const upstream=await fetchWithTimeout(documentEndpoint,{headers:{"Accept":"application/pdf,application/octet-stream;q=0.9,*/*;q=0.1"}});
   if(!upstream.ok)return replyJson({ok:false,error:"Documento oficial indisponível"},502,origin,"no-store");
   const declared=Number(upstream.headers.get("content-length")||0);
   if(declared>MAX_PDF_BYTES)return replyJson({ok:false,error:"PDF acima do limite desta versão"},413,origin,"no-store");
@@ -110,7 +111,7 @@ Deno.serve(async(req)=>{
   if(buffer.byteLength>MAX_PDF_BYTES)return replyJson({ok:false,error:"PDF acima do limite desta versão"},413,origin,"no-store");
   const contentType=(upstream.headers.get("content-type")||"").toLowerCase();
   const magic=new TextDecoder("ascii").decode(new Uint8Array(buffer,0,Math.min(5,buffer.byteLength)));
-  const looksPdf=magic==="%PDF-"||contentType.includes("pdf")||/\.pdf(?:$|[?#])/i.test(target.toString());
+  const looksPdf=magic==="%PDF-"||contentType.includes("pdf");
   if(!looksPdf)return replyJson({ok:false,error:"Este anexo não é um PDF compatível"},415,origin,"no-store");
 
   const title=selected.titulo.replace(/[\r\n"]/g," ").slice(0,180);
