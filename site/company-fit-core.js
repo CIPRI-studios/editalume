@@ -60,7 +60,7 @@ function keywordsFromActivities(activities,manualText){
  const push=(raw,isManual)=>{
   for(const rawToken of tokens(raw)){
    const word=canonical(rawToken);
-   if(word.length<4||STOPWORDS.has(word)||/^\d+$/.test(word))continue;
+   if((word.length<4&&word!=="epi")||STOPWORDS.has(word)||/^\d+$/.test(word))continue;
    const current=ranked.get(word)||{word,score:0,count:0,manual:false};
    current.count+=1;current.manual=current.manual||isManual;
    current.score=Math.max(current.score,keywordScore(word,current.manual))+Math.min(current.count,4)*3;
