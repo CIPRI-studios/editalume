@@ -60,14 +60,18 @@ function safeUrl(value){
 }
 function normalizeDocuments(raw){
  const list=Array.isArray(raw)?raw:Array.isArray(raw?.documentos)?raw.documentos:[];
- return list.map(doc=>({
-  sequence:Number(doc?.sequencialDocumento),
-  title:String(doc?.titulo||doc?.nome||"Documento oficial").trim().slice(0,220),
-  type:String(doc?.tipoDocumentoNome||"Documento").trim().slice(0,120),
-  publishedAt:doc?.dataPublicacaoPncp||null,
-  url:safeUrl(doc?.url),
-  isPdf:/\.pdf(?:$|[?#])/i.test(String(doc?.url||""))||/\bpdf\b/i.test(String(doc?.tipoDocumentoNome||"")+" "+String(doc?.titulo||""))
- })).filter(doc=>Number.isSafeInteger(doc.sequence)&&doc.sequence>0);
+ return list.map(doc=>{
+  const title=String(doc?.titulo||doc?.nome||"Documento oficial").trim().slice(0,220);
+  const type=String(doc?.tipoDocumentoNome||"Documento").trim().slice(0,120);
+  const url=safeUrl(doc?.url),label=norm(type+" "+title),rawUrl=String(doc?.url||"");
+  const explicitArchive=/\.(?:zip|rar|7z)(?:$|[?#])/i.test(rawUrl)||/\b(?:zip|arquivo compactado)\b/i.test(label);
+  const likelyPdf=/\.pdf(?:$|[?#])/i.test(rawUrl)||/\bpdf\b/i.test(label)||
+   /edital|instrumento convocatorio|termo de referencia|projeto basico|estudo tecnico preliminar|\betp\b/.test(label);
+  return {
+   sequence:Number(doc?.sequencialDocumento),title,type,publishedAt:doc?.dataPublicacaoPncp||null,url,
+   isPdf:!explicitArchive&&likelyPdf
+  };
+ }).filter(doc=>Number.isSafeInteger(doc.sequence)&&doc.sequence>0);
 }
 function documentPriority(doc){
  const t=norm((doc?.type||"")+" "+(doc?.title||""));
