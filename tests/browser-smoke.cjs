@@ -8,7 +8,7 @@ const base="http://127.0.0.1:4173/";
 const states="AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" ");
 const now=new Date().toISOString(),later=days=>new Date(Date.now()+days*86400000).toISOString();
 const publicNational=Array.from({length:20},(_,i)=>({
- pncp_id:"00000000000001-1-"+(i+1)+"/2026",uf:"SP",municipality:"Jundiaí",
+ pncp_id:i===0?"88861448000140-1-000529/2026":"00000000000001-1-"+(i+1)+"/2026",uf:i===0?"RS":"SP",municipality:i===0?"Piratini":"Jundiaí",
  agency:"Órgão municipal de demonstração",title:"SERVIÇOS DE LIMPEZA "+(i+1),
  modality:"Pregão eletrônico",estimated_value_brl:1000+i*100,closing_at:later(5+i),
  sector_focus:true,relevance:2,first_observed_at:now,last_observed_at:now,total_count:20
@@ -82,10 +82,13 @@ async function check(page,{pro=false,label}){
  assert.equal(await page.locator("#national-locked").isVisible(),!pro,label+" Free upgrade prompt");
  assert.equal(await page.locator(".national-result-card .tender-analysis-trigger").count(),expected,label+" analysis actions");
  if(label==="mobile-390-free"){
+  // One end-to-end call: local browser -> deployed Editalume bridge -> live PNCP.
+  await page.unroute("https://jhxhbgprjqppzfrjdfvj.supabase.co/functions/v1/editalume-pncp-document**");
   await page.locator(".national-result-card .tender-analysis-trigger").first().click();
   await page.locator(".tender-analysis-panel").waitFor({state:"visible",timeout:8000});
   assert.equal(await page.locator(".tender-analysis-object").isVisible(),true,"Tender summary modal visible");
-  assert((await page.locator(".tender-analysis-object").innerText()).includes("LIMPEZA"),"Tender official object rendered");
+  assert((await page.locator(".tender-analysis-object").innerText()).trim().length>30,"Tender official object rendered");
+  assert((await page.locator(".tender-source-note").innerText()).includes("PNCP"),"Tender source attribution rendered");
   const modalBounds=await page.locator(".tender-analysis-panel").boundingBox();
   assert(modalBounds&&modalBounds.width<=390,"Tender analysis fits mobile viewport");
   await page.locator(".tender-analysis-close").click();
