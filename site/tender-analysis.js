@@ -13,6 +13,77 @@ function clear(el){el.replaceChildren()}
 function fmtDate(value){const d=new Date(value);return Number.isFinite(d.getTime())?dt.format(d):"Não informado"}
 function fmtMoney(value){const n=Number(value);return Number.isFinite(n)&&n>0?money.format(n):"Não informado"}
 function yesNo(value){return value===true?"Sim":value===false?"Não":"Não informado"}
+function readCompanyProfile(){
+ try{
+  const raw=JSON.parse(localStorage.getItem("editalume_company_fit_v1")||"null");
+  if(!raw||typeof raw!=="object"||!Array.isArray(raw.keywords))return null;
+  const keywords=raw.keywords.map(v=>String(v||"").trim()).filter(Boolean).slice(0,12);
+  if(!keywords.length)return null;
+  return {
+   name:String(raw.name||"Sua empresa").slice(0,180),
+   uf:String(raw.uf||"").slice(0,2).toUpperCase(),
+   city:String(raw.city||"").slice(0,100),
+   keywords
+  };
+ }catch{return null}
+}
+function participationCard(decision,profile){
+ const section=node("section","tender-participation tender-participation-"+(decision.tone||"neutral"));
+ const head=node("div","tender-participation-head"),copy=node("div");
+ copy.append(node("span","tender-participation-kicker","VALE A PENA PARTICIPAR?"),node("h3",null,decision.label));
+ const stage=node("span","tender-participation-stage",decision.stage==="documental"?"REFINADA APÓS LEITURA":"ANÁLISE PRELIMINAR");
+ head.append(copy,stage);section.append(head);
+ if(!decision.available){
+  section.append(node("p","tender-participation-intro","Para personalizar esta decisão, crie o perfil da sua empresa pelo CNPJ ou pelas palavras-chave do que você vende."));
+  const go=node("button","tender-participation-profile","Criar perfil da empresa →");go.type="button";
+  go.addEventListener("click",()=>{
+   closeModal();
+   document.getElementById("empresa")?.scrollIntoView({behavior:"smooth",block:"start"});
+  });
+  section.append(go);return section;
+ }
+ const score=node("div","tender-participation-score");
+ score.append(node("strong",null,decision.score),node("span",null,"/100 prioridade"));
+ const context=node("div","tender-participation-context");
+ context.append(node("p",null,"Perfil usado: "+(profile?.name||"empresa cadastrada")));
+ const bar=node("div","tender-participation-bar"),fill=node("span");
+ fill.style.width=Math.max(0,Math.min(100,decision.score))+"%";bar.append(fill);context.append(bar);
+ const top=node("div","tender-participation-overview");top.append(score,context);section.append(top);
+ const columns=node("div","tender-participation-columns");
+ const positives=node("div","tender-participation-list");
+ positives.append(node("h4",null,"A favor"));
+ if(decision.positives.length){
+  for(const text of decision.positives.slice(0,4))positives.append(node("p","positive","✓ "+text));
+ }else positives.append(node("p","neutral","Ainda não há sinal positivo suficiente para destacar."));
+ const cautions=node("div","tender-participation-list");
+ cautions.append(node("h4",null,"Atenção"));
+ if(decision.cautions.length){
+  for(const item of decision.cautions.slice(0,4)){
+   const wrap=node("div","tender-participation-caution");
+   wrap.append(node("p","attention","! "+item.text));
+   if(item.evidence?.page){
+    const source=node("div","tender-participation-citation");
+    source.append(node("span",null,(item.evidence.source||"Documento oficial")+" · p. "+item.evidence.page));
+    if(item.evidence.sourceUrl){
+     const u=new URL(item.evidence.sourceUrl);u.hash="page="+item.evidence.page;
+     source.append(sourceLink("Abrir fonte ↗",u.toString()));
+    }
+    wrap.append(source);
+   }
+   cautions.append(wrap);
+  }
+ }else cautions.append(node("p","neutral","Nenhum ponto de atenção desta regra foi identificado até aqui."));
+ columns.append(positives,cautions);section.append(columns);
+ section.append(node("p","tender-participation-note","O score mede prioridade para análise, não habilitação jurídica nem garantia de sucesso na licitação."));
+ return section;
+}
+function refreshParticipation(){
+ if(!current?.decisionHost)return;
+ const profile=readCompanyProfile();
+ const decision=core.participationDecision(current.detail,current.row,profile,current.evidence,{evidenceReviewed:current.evidenceReviewed});
+ current.decisionHost.replaceWith(participationCard(decision,profile));
+ current.decisionHost=body.querySelector(".tender-participation");
+}
 function ensureModal(){
  if(overlay)return;
  overlay=node("div","tender-analysis-overlay");overlay.hidden=true;
@@ -45,12 +116,15 @@ function sourceLink(label,url){
 function kpi(label,value){const el=node("div","tender-kpi");el.append(node("span",null,label),node("strong",null,value||"Não informado"));return el}
 function renderMetadata(payload,row){
  const detail=core.normalizeDetail(payload.detail,row),docs=core.rankDocuments(core.normalizeDocuments(payload.documents));
- current={row,detail,docs};
+ const same=current?.row===row,previousEvidence=same&&Array.isArray(current?.evidence)?current.evidence:[],previousReviewed=same&&current?.evidenceReviewed===true;
+ current={row,detail,docs,evidence:previousEvidence,evidenceReviewed:previousReviewed,decisionHost:null};
  clear(body);
  const official=core.officialNoticeUrl(detail.pncpId||row.pncp_id||row.id);
  const object=node("div","tender-analysis-object");
  object.append(node("span",null,"OBJETO PUBLICADO"),node("p",null,detail.object||"Objeto não informado."));
  body.append(object);
+ const profile=readCompanyProfile(),decision=core.participationDecision(detail,row,profile,current.evidence,{evidenceReviewed:current.evidenceReviewed});
+ current.decisionHost=participationCard(decision,profile);body.append(current.decisionHost);
 
  const summary=node("div","tender-analysis-summary");
  summary.append(
@@ -173,8 +247,13 @@ async function analyzeDocuments(docs,button,status,results){
    }catch(error){notes.push(doc.title+": "+(error?.message||"não foi possível ler este arquivo."))}
   }
   renderEvidence(evidence,results,notes);
+  if(current){
+   current.evidence=evidence;
+   current.evidenceReviewed=true;
+   refreshParticipation();
+  }
   status.textContent=done
-   ?"Leitura concluída. Cada trecho abaixo informa documento e página."
+   ?"Leitura concluída. Cada trecho abaixo informa documento e página. A recomendação acima também foi refinada."
    :"Os PDFs disponíveis não puderam ser lidos automaticamente nesta versão.";
  }catch(error){
   status.textContent=error?.message||"Não foi possível concluir a leitura documental.";
