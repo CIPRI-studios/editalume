@@ -1,6 +1,6 @@
 /* Editalume-specific app-shell worker. Never intercept Supabase or PNCP data. */
 const PREFIX="editalume-shell-";
-const VERSION=PREFIX+"company-fit-20261005-1";
+const VERSION=PREFIX+"asaas-pro-gated-20261002-1-company-fit-20261005-1";
 const SHELL=["./","./index.html","./plan-policy.js?v=2","./style.css?v=oneoff-checkout-20261002-1",
 "./national.css?v=freemium-20261001-2","./app.js?v=free-sp-20261001-1",
 "./national.js?v=freemium-20261001-4",
