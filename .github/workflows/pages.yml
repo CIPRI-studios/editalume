@@ -46,15 +46,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for file in index.html conta.html avaliar.html privacidade.html manifest.webmanifest sw.js icon.svg account.js national.js app.js; do
+          for file in index.html conta.html avaliar.html privacidade.html manifest.webmanifest sw.js icon.svg account.js national.js app.js company-fit-core.js company-fit.js company-fit.css; do
             test -s "site/$file"
           done
           node --check site/account.js
           node --check site/account-bridge.js
           node --check site/national.js
+          node --check site/company-fit-core.js
+          node --check site/company-fit.js
           node --check site/app.js
           node --check site/sw.js
           node --check site/plan-policy.js
+          node tests/company-fit.cjs
           node tests/freemium-policy.cjs
           node tests/pro-export.cjs
           node tests/launch-copy.cjs
