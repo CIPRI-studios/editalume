@@ -120,14 +120,14 @@ async function documentBytes(pncpId,sequence){
 }
 async function pdfPages(buffer,maxPages){
  const lib=await loadPdfLib(),task=lib.getDocument({data:new Uint8Array(buffer)});
- const pdf=await task.promise,pages=[],limit=Math.min(pdf.numPages,maxPages);
+ const pdf=await task.promise,totalPages=pdf.numPages,pages=[],limit=Math.min(totalPages,maxPages);
  try{
   for(let i=1;i<=limit;i++){
    const page=await pdf.getPage(i),content=await page.getTextContent();
    pages.push({page:i,text:content.items.map(item=>item.str||"").join(" ")});
   }
  }finally{await pdf.destroy()}
- return {pages,totalPages:pdf.numPages,truncated:pdf.numPages>limit};
+ return {pages,totalPages,truncated:totalPages>limit};
 }
 function renderEvidence(all,container,notes){
  clear(container);
