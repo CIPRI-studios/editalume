@@ -18,18 +18,23 @@ jobs:
           node --check site/national.js
           node --check site/company-fit-core.js
           node --check site/company-fit.js
+          node --check site/tender-analysis-core.js
+          node --check site/tender-analysis.js
           node --check site/app.js
           node --check site/sw.js
           node --check site/plan-policy.js
           node --check tests/launch-copy.cjs
           cp supabase/functions/editalume-pro-billing-webhook/index.ts /tmp/editalume-webhook.mjs
           cp supabase/functions/editalume-pro-billing-intent/index.ts /tmp/editalume-intent.mjs
+          cp supabase/functions/editalume-pncp-document/index.ts /tmp/editalume-pncp-document.mjs
           node --check /tmp/editalume-webhook.mjs
           node --check /tmp/editalume-intent.mjs
           node --check /tmp/editalume-pncp-document.mjs
       - name: Regressions offline
         run: |
           node tests/company-fit.cjs
+          node tests/tender-analysis.cjs
+          node tests/pncp-document-bridge.cjs
           node tests/freemium-policy.cjs
           node tests/pro-export.cjs
           node tests/launch-copy.cjs
