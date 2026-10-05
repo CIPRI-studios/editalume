@@ -9,7 +9,7 @@ const ORIGINS=new Set([
  "http://127.0.0.1:4173",
  "http://localhost:4173"
 ]);
-const PNCP="https://pncp.gov.br/api/pncp";
+const PNCP_INTEGRATION="https://pncp.gov.br/api/pncp";\nconst PNCP_CONSULTA="https://pncp.gov.br/api/consulta";
 const MAX_PDF_BYTES=12*1024*1024;
 const WINDOW_MS=60_000,MAX_PER_WINDOW=40;
 const buckets=new Map();
@@ -84,11 +84,11 @@ Deno.serve(async(req)=>{
  const url=new URL(req.url),action=url.searchParams.get("action")||"metadata";
  const pncpId=url.searchParams.get("pncp_id")||"",parsed=parsePncpId(pncpId);
  if(!parsed)return replyJson({ok:false,error:"Controle PNCP inválido"},400,origin,"no-store");
- const base=PNCP+"/v1/orgaos/"+parsed.cnpj+"/compras/"+parsed.year+"/"+parsed.sequence;
+ const integrationBase=PNCP_INTEGRATION+"/v1/orgaos/"+parsed.cnpj+"/compras/"+parsed.year+"/"+parsed.sequence;\n const detailBase=PNCP_CONSULTA+"/v1/orgaos/"+parsed.cnpj+"/compras/"+parsed.year+"/"+parsed.sequence;
 
  try{
   if(action==="metadata"){
-   const [detail,docsRaw]=await Promise.all([pncpJson(base),pncpJson(base+"/arquivos")]);
+   const [detail,docsRaw]=await Promise.all([pncpJson(detailBase),pncpJson(integrationBase+"/arquivos")]);
    return replyJson({ok:true,pncp_id:pncpId,detail,documents:cleanDocs(docsRaw)},200,origin);
   }
   if(action!=="document")return replyJson({ok:false,error:"Ação inválida"},400,origin,"no-store");
@@ -96,13 +96,13 @@ Deno.serve(async(req)=>{
   if(!Number.isSafeInteger(documentSequence)||documentSequence<1)
    return replyJson({ok:false,error:"Documento inválido"},400,origin,"no-store");
 
-  const docs=cleanDocs(await pncpJson(base+"/arquivos"));
+  const docs=cleanDocs(await pncpJson(integrationBase+"/arquivos"));
   const selected=docs.find(doc=>doc.sequencialDocumento===documentSequence);
   if(!selected)return replyJson({ok:false,error:"Documento não localizado no PNCP"},404,origin,"no-store");
 
   // Use PNCP's own documented download endpoint instead of proxying the URL
   // returned in document metadata. This keeps every upstream request pinned to PNCP.
-  const documentEndpoint=base+"/arquivos/"+documentSequence;
+  const documentEndpoint=integrationBase+"/arquivos/"+documentSequence;
   const upstream=await fetchWithTimeout(documentEndpoint,{headers:{"Accept":"application/pdf,application/octet-stream;q=0.9,*/*;q=0.1"}});
   if(!upstream.ok)return replyJson({ok:false,error:"Documento oficial indisponível"},502,origin,"no-store");
   const declared=Number(upstream.headers.get("content-length")||0);
