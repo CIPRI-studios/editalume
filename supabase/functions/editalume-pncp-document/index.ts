@@ -16,7 +16,7 @@ const buckets=new Map();
 
 function cors(origin){
  return {
-  "Access-Control-Allow-Origin":origin,
+  "Access-Control-Allow-Origin":origin||"*",
   "Access-Control-Allow-Methods":"GET,OPTIONS",
   "Access-Control-Allow-Headers":"Content-Type",
   "Access-Control-Expose-Headers":"Content-Type,Content-Length,X-Editalume-Document-Title",
@@ -76,7 +76,7 @@ function safeDocumentUrl(value){
 }
 Deno.serve(async(req)=>{
  const origin=req.headers.get("origin")||"";
- if(!ORIGINS.has(origin))return replyJson({ok:false,error:"Origem não autorizada"},403,origin,"no-store");
+ if(origin&&!ORIGINS.has(origin))return replyJson({ok:false,error:"Origem não autorizada"},403,origin,"no-store");
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:cors(origin)});
  if(req.method!=="GET")return replyJson({ok:false,error:"Método não permitido"},405,origin,"no-store");
  if(!allowed(req))return replyJson({ok:false,error:"Muitas consultas em pouco tempo"},429,origin,"no-store");
