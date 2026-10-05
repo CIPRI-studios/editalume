@@ -77,7 +77,7 @@ function card(record){
                 node("div","label","VALOR ESTIMADO"),
                 node("div","amount",record.estimated_value_brl>0?money.format(record.estimated_value_brl):"Não informado"));
  const a=node("a",null,"Conferir edital ↗");a.href=link;a.target="_blank";a.rel="noopener noreferrer";
- aside.append(details,a);el.append(left,aside);return el;
+ aside.append(details,a);\n const analyze=node("button","tender-analysis-trigger","Analisar edital ↗");analyze.type="button";\n analyze.addEventListener("click",()=>window.EditalumeTenderAnalysis?.open({pncp_id:record.id,title:record.object,agency:record.organ,municipality:record.city,uf:record.uf||"SP",modality:record.modality,estimated_value_brl:record.estimated_value_brl,closing_at:record.deadline},analyze));\n aside.append(analyze);el.append(left,aside);return el;
 }
 function search(){
  const premium=isPro();
