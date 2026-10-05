@@ -30,6 +30,16 @@ const cors={"access-control-allow-origin":"*","access-control-allow-methods":"GE
 async function mock(page,traffic){
  await page.route("**/search-index.json*",route=>route.fulfill({json:fallback}));
  await page.route("**/refresh-status.json*",route=>route.fulfill({json:{degraded:false,attempted_at:now}}));
+ await page.route("https://jhxhbgprjqppzfrjdfvj.supabase.co/functions/v1/editalume-pncp-document**",async route=>{
+  const req=route.request(),u=new URL(req.url());
+  if(u.searchParams.get("action")==="document")return route.fulfill({status:415,json:{ok:false,error:"PDF fixture unavailable"},headers:cors});
+  return route.fulfill({json:{ok:true,pncp_id:u.searchParams.get("pncp_id"),detail:{
+   numeroControlePNCP:u.searchParams.get("pncp_id"),objetoCompra:"SERVIÇOS DE LIMPEZA DEMONSTRAÇÃO",
+   orgaoEntidade:{razaoSocial:"Órgão municipal de demonstração"},modalidadeNome:"Pregão eletrônico",
+   dataEncerramentoProposta:later(10),valorTotalEstimado:125000,processo:"PROC-2026-01",
+   modoDisputaNome:"Aberto",srp:true,amparoLegal:{nome:"Lei 14.133/2021"}
+  },documents:[]},headers:cors});
+ });
  await page.route("https://jhxhbgprjqppzfrjdfvj.supabase.co/rest/v1/**",async route=>{
   const req=route.request(),url=req.url(),method=req.method();
   if(method==="OPTIONS")return route.fulfill({status:204,headers:cors});
@@ -70,6 +80,17 @@ async function check(page,{pro=false,label}){
  assert.equal(await page.locator("#national-download").isEnabled(),pro,label+" CSV availability");
  assert.equal(await page.locator("#national-pro-tools").isVisible(),pro,label+" saved search dashboard");
  assert.equal(await page.locator("#national-locked").isVisible(),!pro,label+" Free upgrade prompt");
+ assert.equal(await page.locator(".national-result-card .tender-analysis-trigger").count(),expected,label+" analysis actions");
+ if(label==="mobile-390-free"){
+  await page.locator(".national-result-card .tender-analysis-trigger").first().click();
+  await page.locator(".tender-analysis-panel").waitFor({state:"visible",timeout:8000});
+  assert.equal(await page.locator(".tender-analysis-object").isVisible(),true,"Tender summary modal visible");
+  assert((await page.locator(".tender-analysis-object").innerText()).includes("LIMPEZA"),"Tender official object rendered");
+  const modalBounds=await page.locator(".tender-analysis-panel").boundingBox();
+  assert(modalBounds&&modalBounds.width<=390,"Tender analysis fits mobile viewport");
+  await page.locator(".tender-analysis-close").click();
+ }
+
  if(pro){
   await page.waitForFunction(()=>document.getElementById("national-insight-total")?.textContent==="20",
    {timeout:12000});
