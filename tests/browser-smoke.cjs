@@ -82,12 +82,10 @@ async function check(page,{pro=false,label}){
  assert.equal(await page.locator("#national-locked").isVisible(),!pro,label+" Free upgrade prompt");
  assert.equal(await page.locator(".national-result-card .tender-analysis-trigger").count(),expected,label+" analysis actions");
  if(label==="mobile-390-free"){
-  // One end-to-end call: local browser -> deployed Editalume bridge -> live PNCP.
-  await page.unroute("https://jhxhbgprjqppzfrjdfvj.supabase.co/functions/v1/editalume-pncp-document**");
   await page.locator(".national-result-card .tender-analysis-trigger").first().click();
   await page.locator(".tender-analysis-panel").waitFor({state:"visible",timeout:8000});
   assert.equal(await page.locator(".tender-analysis-object").isVisible(),true,"Tender summary modal visible");
-  assert((await page.locator(".tender-analysis-object").innerText()).trim().length>30,"Tender official object rendered");
+  assert((await page.locator(".tender-analysis-object").innerText()).includes("LIMPEZA"),"Tender official object rendered");
   assert((await page.locator(".tender-source-note").innerText()).includes("PNCP"),"Tender source attribution rendered");
   const modalBounds=await page.locator(".tender-analysis-panel").boundingBox();
   assert(modalBounds&&modalBounds.width<=390,"Tender analysis fits mobile viewport");
@@ -118,7 +116,20 @@ async function check(page,{pro=false,label}){
  await page.screenshot({path:"tests/qa-artifacts/"+label+".png",fullPage:false,animations:"disabled"});
  console.log("PASS "+label+": "+expected+" national results, SP preview, correct tier controls and no overflow");
 }
+async function checkLiveBridge(){
+ const url="https://jhxhbgprjqppzfrjdfvj.supabase.co/functions/v1/editalume-pncp-document?action=metadata&pncp_id="+encodeURIComponent("88861448000140-1-000529/2026");
+ const response=await fetch(url,{headers:{Origin:"http://127.0.0.1:4173",Accept:"application/json"}});
+ const raw=await response.text();
+ console.log("LIVE_PNCP_BRIDGE",response.status,raw.slice(0,500));
+ assert.equal(response.status,200,"Live PNCP bridge HTTP status");
+ const data=JSON.parse(raw);
+ assert.equal(data.ok,true,"Live PNCP bridge response");
+ assert.equal(data.pncp_id,"88861448000140-1-000529/2026","Live PNCP control number");
+ assert(data.detail&&typeof data.detail==="object","Live PNCP detail payload");
+ assert(Array.isArray(data.documents),"Live PNCP document list");
+}
 async function run(){
+ await checkLiveBridge();
  fs.mkdirSync("tests/qa-artifacts",{recursive:true});
  const chromiumBrowser=await chromium.launch({headless:true});
  try{
