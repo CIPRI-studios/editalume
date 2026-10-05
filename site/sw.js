@@ -4,7 +4,8 @@ const VERSION=PREFIX+"asaas-pro-gated-20261002-1-company-fit-20261005-1-tender-a
 const SHELL=["./","./index.html","./plan-policy.js?v=2","./style.css?v=oneoff-checkout-20261002-1",
 "./national.css?v=freemium-20261001-2","./app.js?v=free-sp-20261001-1",
 "./national.js?v=freemium-20261001-4",
-"./company-fit.css?v=1","./company-fit-core.js?v=1","./company-fit.js?v=1",\n"./tender-analysis.css?v=1","./tender-analysis-core.js?v=1","./tender-analysis.js?v=1",
+"./company-fit.css?v=1","./company-fit-core.js?v=1","./company-fit.js?v=1",
+"./tender-analysis.css?v=1","./tender-analysis-core.js?v=1","./tender-analysis.js?v=1",
 "./account-bridge.js?v=4","./account.js?v=5","./account.css?v=3","./conta.html","./privacidade.html","./icon.svg",
 "./manifest.webmanifest?v=br-20260929-4"];
 self.addEventListener("install",event=>{
