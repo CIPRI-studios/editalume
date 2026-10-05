@@ -179,7 +179,7 @@ function renderCards(){
     node("strong","national-date",formatDate(row.closing_at)),
     node("span","national-label","VALOR ESTIMADO"),
     node("strong","national-money",formatValue(row.estimated_value_brl)));
-  const link=publicLink(row,"Ver edital no PNCP ↗");if(link)side.append(link);
+  const link=publicLink(row,"Ver edital no PNCP ↗");if(link)side.append(link);\n  const analyze=node("button","tender-analysis-trigger","Analisar edital ↗");analyze.type="button";\n  analyze.addEventListener("click",()=>window.EditalumeTenderAnalysis?.open(row,analyze));side.append(analyze);
   card.append(main,side);root.append(card);
  }
  $("national-result-count").textContent=fmt.format(state.total)+(state.total===1?" edital encontrado":" editais encontrados");
