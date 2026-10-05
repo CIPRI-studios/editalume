@@ -15,9 +15,9 @@ const MAX_PDF_BYTES=12*1024*1024;
 const WINDOW_MS=60_000,MAX_PER_WINDOW=40;
 const buckets=new Map();
 
-function cors(origin){
+function cors(_origin){
  return {
-  "Access-Control-Allow-Origin":origin||"*",
+  "Access-Control-Allow-Origin":"*",
   "Access-Control-Allow-Methods":"GET,OPTIONS",
   "Access-Control-Allow-Headers":"Content-Type",
   "Access-Control-Expose-Headers":"Content-Type,Content-Length,X-Editalume-Document-Title",
