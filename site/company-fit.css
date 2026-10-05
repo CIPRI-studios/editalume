@@ -1,0 +1,61 @@
+/* CNPJ-first company matching */
+.company-fit-section{padding:72px 0 36px;background:linear-gradient(180deg,#f7faf8 0%,#fff 100%)}
+.company-fit-layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:28px;align-items:start}
+.company-fit-copy .kicker{margin-bottom:12px}
+.company-fit-copy h2{font-size:clamp(2rem,4vw,3.6rem);line-height:.98;letter-spacing:-.045em;margin:0 0 18px;color:#163c2c}
+.company-fit-copy h2 span{color:#537565}
+.company-fit-copy>p{max-width:650px;font-size:1.04rem;line-height:1.7;color:#53645b}
+.company-fit-points{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:24px}
+.company-fit-point{border:1px solid #dbe6df;background:#fff;border-radius:14px;padding:14px}
+.company-fit-point strong{display:block;color:#163c2c;margin-bottom:4px}
+.company-fit-point span{font-size:.84rem;line-height:1.4;color:#6b786f}
+.company-fit-card{border:1px solid #d8e5dd;background:#fff;border-radius:22px;padding:22px;box-shadow:0 18px 45px rgba(22,60,44,.08)}
+.company-fit-chip{display:inline-flex;align-items:center;gap:7px;font-size:.72rem;font-weight:800;letter-spacing:.08em;color:#275b43;background:#e9f3ed;border-radius:999px;padding:7px 10px;margin-bottom:14px}
+.company-fit-card h3{font-size:1.35rem;margin:0 0 8px;color:#173b2d}
+.company-fit-card>p{margin:0 0 18px;color:#637269;line-height:1.55}
+.company-fit-form{display:grid;gap:13px}
+.company-fit-form label{display:grid;gap:6px;font-size:.79rem;font-weight:700;color:#44564c}
+.company-fit-form input{width:100%;box-sizing:border-box;border:1px solid #cfdcd4;background:#fbfdfb;border-radius:12px;padding:13px 14px;font:inherit;color:#173b2d;outline:none}
+.company-fit-form input:focus{border-color:#58836d;box-shadow:0 0 0 3px rgba(39,91,67,.10)}
+.company-fit-submit{border:0;border-radius:12px;background:#163c2c;color:#fff;font:inherit;font-weight:800;padding:14px 16px;cursor:pointer}
+.company-fit-submit:disabled,.company-fit-actions button:disabled{opacity:.58;cursor:not-allowed}
+.company-fit-privacy{font-size:.75rem!important;color:#7a877f!important;margin:10px 0 0!important}
+.company-fit-status{min-height:1.25rem;margin:14px 0 0!important;font-size:.82rem!important;color:#506158!important}
+.company-fit-status.error{color:#9a2e2e!important}.company-fit-status.warning{color:#8a5c13!important}.company-fit-status.success{color:#285f45!important}
+.company-fit-profile{margin-top:18px;padding-top:18px;border-top:1px solid #e3ebe6}
+.company-fit-profile-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.company-fit-profile h4{margin:0;color:#183c2e;font-size:1.08rem}
+.company-fit-profile-meta{margin:3px 0 0;font-size:.76rem;color:#748179}
+.company-fit-profile-activity{margin:12px 0 9px;font-size:.88rem;line-height:1.5;color:#44564c}
+.company-fit-tags{display:flex;flex-wrap:wrap;gap:6px}
+.company-fit-tag{font-size:.72rem;background:#f0f5f2;color:#315a46;border:1px solid #dce8e0;padding:5px 8px;border-radius:999px}
+.company-fit-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.company-fit-actions button{border:1px solid #cddbd2;background:#fff;border-radius:10px;padding:9px 11px;font:inherit;font-size:.78rem;font-weight:700;color:#254b38;cursor:pointer}
+.company-fit-actions .danger{color:#8a3838}
+.company-fit-results-wrap{grid-column:1/-1;margin-top:4px}
+.company-fit-results-head{display:flex;justify-content:space-between;gap:18px;align-items:end;margin:18px 0 12px}
+.company-fit-results-head h3{margin:2px 0 0;color:#173b2d;font-size:1.5rem}
+.company-fit-results-head p{margin:0;max-width:520px;color:#708078;font-size:.78rem;text-align:right}
+.company-fit-results{display:grid;gap:12px}
+.company-match-card{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:20px;border:1px solid #dfe8e2;border-radius:16px;background:#fff;padding:18px}
+.company-match-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.company-match-score{font-size:.73rem;font-weight:850;color:#1f5c3f;background:#e7f3eb;border-radius:999px;padding:6px 9px}
+.company-match-place{font-size:.73rem;color:#758078}
+.company-match-main h3{margin:12px 0 6px;color:#1a372d;font-size:1rem;line-height:1.35}
+.company-match-agency{margin:0;color:#6d7972;font-size:.82rem}
+.company-match-reasons{margin:12px 0 0;padding-left:18px;color:#4e6157;font-size:.78rem;line-height:1.5}
+.company-match-side{border-left:1px solid #e3ebe6;padding-left:18px;display:grid;align-content:start;gap:4px}
+.company-match-label{font-size:.66rem;font-weight:800;letter-spacing:.08em;color:#849089;margin-top:5px}
+.company-match-side strong{font-size:.88rem;color:#203f32}
+.company-match-link{margin-top:10px;color:#1e5b40;font-size:.8rem;font-weight:800;text-decoration:none}
+.company-fit-footnote{margin-top:10px;color:#7a867f;font-size:.73rem;line-height:1.5}
+@media(max-width:850px){
+ .company-fit-section{padding:48px 0 24px}
+ .company-fit-layout{grid-template-columns:1fr}
+ .company-fit-points{grid-template-columns:1fr}
+ .company-fit-results-wrap{grid-column:auto}
+ .company-fit-results-head{align-items:flex-start;flex-direction:column}
+ .company-fit-results-head p{text-align:left}
+ .company-match-card{grid-template-columns:1fr}
+ .company-match-side{border-left:0;border-top:1px solid #e3ebe6;padding-left:0;padding-top:12px}
+}

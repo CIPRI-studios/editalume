@@ -17,9 +17,12 @@
 <title>Editalume | Inteligência em oportunidades públicas</title>
 <link rel="stylesheet" href="./style.css?v=oneoff-checkout-20261002-1">
 <link rel="stylesheet" href="./national.css?v=freemium-20261001-2">
+<link rel="stylesheet" href="./company-fit.css?v=1">
 <script src="./plan-policy.js?v=2" defer></script>
 <script src="./app.js?v=free-sp-20261001-1" defer></script>
 <script src="./national.js?v=freemium-20261001-4" defer></script>
+<script src="./company-fit-core.js?v=1" defer></script>
+<script src="./company-fit.js?v=1" defer></script>
 <script type="module" src="./account-bridge.js?v=4"></script>
 <script src="./pwa.js?v=br-20260929-4" defer></script>
 </head>
@@ -31,11 +34,12 @@
     <a class="identity" href="./" aria-label="Editalume, início"><span class="symbol" aria-hidden="true"><span></span><span></span><span></span></span><span class="wordmark">editalume<span class="mark-dot">.</span></span></a>
     <nav class="main-nav" aria-label="Navegação principal">
       <a href="#plataforma">A plataforma</a>
+      <a href="#empresa">Para minha empresa</a>
       <a href="#brasil">Busca nacional</a><a href="#pesquisa">Acervo paulista</a>
       <a href="#metodo">Metodologia</a>
       <a href="#planos">Planos</a><a href="./conta.html">Minha conta</a><a href="./avaliar.html">Avaliar piloto</a>
     </nav>
-    <a class="header-cta" href="#brasil">Explorar base <span aria-hidden="true">↗</span></a>
+    <a class="header-cta" href="#empresa">Usar meu CNPJ <span aria-hidden="true">↗</span></a>
   </div>
 </header>
 <main>
@@ -46,8 +50,8 @@
       <h1>O Brasil é o mercado. <span>Encontre sua próxima oportunidade.</span></h1>
       <p>Pesquisa nacional conectada a um banco próprio, com indicadores transparentes de cobertura por estado. Começamos com uma amostra de SP e expandimos os demais estados gradualmente.</p><div class="national-release-tag" role="note"><span class="national-release-dot"></span> BUSCA NACIONAL · VERSÃO BR-04</div>
       <div class="hero-actions">
-        <a href="#brasil" class="button button-primary">Pesquisar no Brasil <span aria-hidden="true">↗</span></a>
-        <a href="#metodo" class="text-link">Entenda nossa análise <span aria-hidden="true">→</span></a><a href="./conta.html" class="text-link">Criar conta gratuita <span aria-hidden="true">↗</span></a>
+        <a href="#empresa" class="button button-primary">Encontrar para minha empresa <span aria-hidden="true">↗</span></a>
+        <a href="#brasil" class="text-link">Pesquisar manualmente <span aria-hidden="true">→</span></a><a href="./conta.html" class="text-link">Criar conta gratuita <span aria-hidden="true">↗</span></a>
       </div>
       <div class="trust-line"><span class="trust-icon" aria-hidden="true">✓</span> Fonte oficial PNCP <span class="tiny-separator">·</span> Sem cadastro para pesquisar <span class="tiny-separator">·</span> Plataforma independente</div>
     </div>
@@ -72,6 +76,46 @@
     <div class="metric"><strong id="metricScanned">—</strong><span>Registros examinados</span></div>
     <div class="metric"><strong>Rotativa</strong><span>Coleta nacional em implantação*</span></div>
   </div>
+</section>
+<section class="company-fit-section section" id="empresa" aria-labelledby="company-fit-title">
+ <div class="container company-fit-layout">
+  <div class="company-fit-copy">
+   <div class="kicker">COMECE PELA SUA EMPRESA</div>
+   <h2 id="company-fit-title">Seu CNPJ vira um ponto de partida.<br><span>Menos busca, mais prioridade.</span></h2>
+   <p>Consulte o cadastro público da empresa, transforme as atividades em palavras-chave e veja uma prévia das oportunidades mais compatíveis na base do Editalume.</p>
+   <div class="company-fit-points" aria-label="Como funciona">
+    <div class="company-fit-point"><strong>1 · Perfil</strong><span>CNPJ e atividade econômica ajudam a entender o que sua empresa oferece.</span></div>
+    <div class="company-fit-point"><strong>2 · Triagem</strong><span>O Editalume cruza atividade, localização e termos presentes nos editais.</span></div>
+    <div class="company-fit-point"><strong>3 · Conferência</strong><span>Você abre o PNCP e valida requisitos, documentos e condições na fonte oficial.</span></div>
+   </div>
+  </div>
+  <aside class="company-fit-card" aria-label="Encontrar oportunidades pelo perfil da empresa">
+   <span class="company-fit-chip">GRÁTIS · PERFIL LOCAL</span>
+   <h3>O que combina com sua empresa?</h3>
+   <p>Informe o CNPJ. Se quiser, acrescente produtos ou serviços específicos para melhorar a triagem.</p>
+   <form id="company-fit-form" class="company-fit-form">
+    <label><span>CNPJ</span><input id="company-fit-cnpj" inputmode="numeric" autocomplete="off" maxlength="18" placeholder="00.000.000/0000-00"></label>
+    <label><span>O que você vende? <small>(opcional)</small></span><input id="company-fit-keywords" maxlength="240" autocomplete="off" placeholder="Ex.: EPI, material hospitalar, limpeza"></label>
+    <button id="company-fit-submit" class="company-fit-submit" type="submit">Encontrar oportunidades →</button>
+   </form>
+   <p class="company-fit-privacy">A consulta de CNPJ ocorre somente quando você pede, via BrasilAPI. O perfil é salvo apenas neste navegador e não é enviado ao Editalume como cadastro comercial.</p>
+   <p id="company-fit-status" class="company-fit-status" role="status" aria-live="polite"></p>
+   <section id="company-fit-profile" class="company-fit-profile" hidden aria-label="Perfil identificado">
+    <div class="company-fit-profile-head"><div><h4 id="company-fit-name">Empresa</h4><p id="company-fit-meta" class="company-fit-profile-meta"></p></div></div>
+    <p id="company-fit-activity" class="company-fit-profile-activity"></p>
+    <div id="company-fit-tags" class="company-fit-tags" aria-label="Palavras-chave do perfil"></div>
+    <div class="company-fit-actions">
+     <button id="company-fit-refresh" type="button">Atualizar oportunidades</button>
+     <button id="company-fit-forget" class="danger" type="button">Esquecer empresa</button>
+    </div>
+   </section>
+  </aside>
+  <section id="company-fit-results-wrap" class="company-fit-results-wrap" hidden aria-labelledby="company-fit-result-count">
+   <div class="company-fit-results-head"><div><div class="kicker">TRIAGEM INDICATIVA</div><h3 id="company-fit-result-count">Oportunidades priorizadas</h3></div><p>O percentual não confirma habilitação nem elegibilidade. Ele apenas prioriza sinais de atividade e localização; confira sempre o edital oficial.</p></div>
+   <div id="company-fit-results" class="company-fit-results" aria-live="polite"></div>
+   <p class="company-fit-footnote">Prévia gratuita limitada aos melhores resultados encontrados nesta amostra. A situação, o prazo e os requisitos podem mudar no PNCP.</p>
+  </section>
+ </div>
 </section>
 <section class="national-section" id="brasil" aria-labelledby="national-title"><div class="container">
  <div class="national-heading"><div><div class="national-eyebrow">EDIÇÃO BRASIL · BASE NACIONAL</div><h2 id="national-title">De norte a sul.<br><span>Uma busca mais inteligente.</span></h2><p>Uma pesquisa única para as 27 unidades federativas. Veja exatamente onde já recebemos dados, sem confundir cobertura planejada com editais efetivamente coletados.</p></div><div class="national-progress-card" aria-live="polite"><span>ESTADOS COM DADOS RECEBIDOS</span><strong id="national-uf-count">—/27</strong><p id="national-coverage-description">Conectando ao catálogo...</p><small>O ritmo de expansão depende da disponibilidade da API oficial.</small></div></div>
